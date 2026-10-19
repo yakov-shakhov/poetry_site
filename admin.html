@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Управление стихами — Яков Шахов</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header class="site">
+    <div class="wrap">
+      <a class="logo" href="index.html">Яков <span>Шахов</span></a>
+      <nav class="main">
+        <a href="index.html">← На сайт</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <h2 class="section">Управление стихами</h2>
+
+    <div class="notice">
+      Здесь можно добавлять, редактировать и удалять стихотворения.
+      Изменения сохраняются в этом браузере и сразу видны на сайте.
+      Чтобы опубликовать их для всех, нажмите <b>«Скачать poems.js»</b>
+      и замените этим файлом <b>data/poems.js</b> в папке сайта,
+      затем опубликуйте изменения (подробно — в <b>instruction.txt</b>).
+    </div>
+
+    <form class="admin-form" id="poemForm">
+      <input type="hidden" name="id">
+      <label for="f-title">Название</label>
+      <input type="text" id="f-title" name="title" required>
+      <label for="f-genre">Рубрика</label>
+      <input type="text" id="f-genre" name="genre" placeholder="например: философская лирика" list="genres">
+      <datalist id="genres"></datalist>
+      <label for="f-date">Дата (ГГГГ-ММ-ДД)</label>
+      <input type="text" id="f-date" name="date" placeholder="2026-10-19">
+      <label for="f-text">Текст стихотворения</label>
+      <textarea id="f-text" name="text" required></textarea>
+      <div class="admin-row">
+        <button type="submit" class="btn" id="saveBtn">Добавить стих</button>
+        <button type="button" class="btn ghost" id="resetBtn" hidden>Отменить правку</button>
+        <span id="formMsg"></span>
+      </div>
+    </form>
+
+    <h2 class="section">Все произведения <span id="cnt" style="color:var(--muted);font-size:17px"></span></h2>
+    <ul class="poems admin-list" id="list"></ul>
+
+    <div class="admin-row" style="margin:26px 0 50px">
+      <button type="button" class="btn" id="exportBtn">Скачать poems.js</button>
+      <button type="button" class="btn ghost" id="resetAllBtn">Сбросить локальные изменения</button>
+    </div>
+  </main>
+
+  <script src="data/poems.js"></script>
+  <script>
+  (function () {
+    "use strict";
+    var KEY = "poetry_admin_poems";
+    var poems;
+
+    function load() {
+      try {
+        var s = localStorage.getItem(KEY);
+        if (s) return JSON.parse(s);
+      } catch (e) { /* перечитаем исходный файл */ }
+      return window.POEMS.map(function (p) { return Object.assign({}, p); });
+    }
+    function persist() { localStorage.setItem(KEY, JSON.stringify(poems)); }
+    function esc(s) {
+      return String(s == null ? "" : s).replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+    function dateKey(d) {
+      var m = /^(\d{2})\.(\d{2})\.(\d{4})/.exec(d || "");
+      return m ? m[3] + m[2] + m[1] : String(d || "");
+    }
+    function sorted() {
+      return poems.slice().sort(function (a, b) {
+        return dateKey(b.date).localeCompare(dateKey(a.date));
+      });
+    }
+    function newId(title) {
+      var slug = String(title).toLowerCase()
+        .replace(/[^a-zа-яё0-9]+/gi, "-").replace(/^-+|-+$/g, "").slice(0, 40);
+      return (slug || "poem") + "-" + Date.now().toString(36);
+    }
+
+    var listEl = document.getElementById("list");
+    var form = document.getElementById("poemForm");
+    var msg = document.getElementById("formMsg");
+
+    function render() {
+      var s = sorted();
+      document.getElementById("cnt").textContent = "— " + s.length;
+      listEl.innerHTML = s.map(function (p) {
+        return '<li><div class="t">' + esc(p.title) +
+          '<div class="meta">' + esc(p.genre || "без рубрики") + " · " + esc(p.date || "") + '</div></div>' +
+          '<div class="actions">' +
+            '<button type="button" class="btn ghost small" data-edit="' + esc(p.id) + '">Правка</button>' +
+            '<button type="button" class="btn danger small" data-del="' + esc(p.id) + '">Удалить</button>' +
+          '</div></li>';
+      }).join("");
+    }
+
+    listEl.addEventListener("click", function (e) {
+      var id = e.target.getAttribute("data-edit");
+      if (id) {
+        var p = poems.filter(function (x) { return x.id === id; })[0];
+        if (!p) return;
+        form.id.value = p.id; form.title.value = p.title;
+        form.genre.value = p.genre || ""; form.date.value = p.date || "";
+        form.text.value = p.text;
+        document.getElementById("saveBtn").textContent = "Сохранить";
+        document.getElementById("resetBtn").hidden = false;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+      id = e.target.getAttribute("data-del");
+      if (id && confirm("Удалить стихотворение?")) {
+        poems = poems.filter(function (x) { return x.id !== id; });
+        persist(); render(); msg.textContent = "Удалено (локально).";
+      }
+    });
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var rec = {
+        id: form.id.value || newId(form.title.value),
+        title: form.title.value.trim(),
+        genre: form.genre.value.trim() || "без рубрики",
+        date: form.date.value.trim(),
+        text: form.text.value.replace(/\r\n/g, "\n").trim()
+      };
+      if (!rec.title || !rec.text) { msg.textContent = "Заполните название и текст."; return; }
+      var i = poems.findIndex(function (x) { return x.id === rec.id; });
+      if (i === -1) { poems.push(rec); msg.textContent = "Добавлено (локально)."; }
+      else { poems[i] = rec; msg.textContent = "Сохранено (локально)."; }
+      persist(); render(); resetForm();
+    });
+
+    function resetForm() {
+      form.reset(); form.id.value = "";
+      document.getElementById("saveBtn").textContent = "Добавить стих";
+      document.getElementById("resetBtn").hidden = true;
+    }
+    document.getElementById("resetBtn").addEventListener("click", resetForm);
+
+    document.getElementById("exportBtn").addEventListener("click", function () {
+      var blob = new Blob(
+        ["window.POEMS = " + JSON.stringify(sorted(), null, 1) + ";\n"],
+        { type: "text/javascript" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "poems.js";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      msg.textContent = "Файл скачан — замените им data/poems.js и опубликуйте.";
+    });
+
+    document.getElementById("resetAllBtn").addEventListener("click", function () {
+      if (!confirm("Вернуться к версии из data/poems.js? Локальные правки будут потеряны.")) return;
+      localStorage.removeItem(KEY);
+      poems = load(); render(); resetForm();
+      msg.textContent = "Локальные изменения сброшены.";
+    });
+
+    poems = load();
+    var genres = {};
+    poems.forEach(function (p) { if (p.genre) genres[p.genre] = 1; });
+    document.getElementById("genres").innerHTML =
+      Object.keys(genres).sort().map(function (g) { return "<option value='" + esc(g) + "'>"; }).join("");
+    render();
+  })();
+  </script>
+</body>
+</html>
