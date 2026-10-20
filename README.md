@@ -4,6 +4,7 @@
 
 - Страница на Стихи.ру: https://stihi.ru/avtor/yakovshakhov
 - Как добавлять стихи и публиковать изменения — см. `instruction.txt`
+- Telegram-бот-админка (добавление/правка стихов из Telegram) — см. `bot_instructions.txt`
 - Идеи развития проекта — см. `next_steps.txt`
 
 ## Структура
@@ -14,5 +15,6 @@ admin.html              — панель управления: добавить/
 assets/                 — стили, скрипты, фото автора
 data/author.js          — сведения об авторе
 data/poems.js           — все стихотворения (генерируемый файл)
+bot/                    — Telegram-бот-админка (см. bot_instructions.txt)
 scripts/import_stihi.py — импорт стихов со Стихи.ру
 ```
