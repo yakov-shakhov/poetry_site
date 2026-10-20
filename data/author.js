@@ -1,5 +1,5 @@
 window.AUTHOR = {
-  name: "Яков Шахов",
+  name: "Yakov Shakhov",
   photo: "assets/photo.jpg",
   bio: "Поэт, кандидат физико-математических наук.",
   links: {
