@@ -722,7 +722,7 @@ async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # ------------------------------------------------------------------------ main
 
-def build_application():
+def build_conversations():
     filter_text = filters.TEXT & ~filters.COMMAND
 
     add_conv = ConversationHandler(
@@ -794,7 +794,7 @@ def build_application():
         per_message=False,
     )
 
-    return Application.builder().token(BOT_TOKEN).post_init(set_commands).build()
+    return add_conv, edit_conv, delete_conv, author_conv
 
 
 async def set_commands(app):
@@ -814,7 +814,8 @@ def main():
     if not BOT_TOKEN:
         raise SystemExit("Не задан BOT_TOKEN (переменная окружения). См. bot_instructions.txt")
 
-    app = build_application()
+    app = Application.builder().token(BOT_TOKEN).post_init(set_commands).build()
+    add_conv, edit_conv, delete_conv, author_conv = build_conversations()
     app.add_handler(CommandHandler(["start"], cmd_start))
     app.add_handler(CommandHandler(["help"], cmd_help))
     app.add_handler(CommandHandler(["id"], cmd_id))
