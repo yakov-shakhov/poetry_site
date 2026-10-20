@@ -94,21 +94,28 @@ ID сохранится в bot/admins.json (файл не публикуется
 
 7. КАК ОСТАНОВИТЬ / ЗАПУСТИТЬ НАПОСТОЯННО
 -----------------------------------------
-Остановить: Ctrl+C в окне запуска бота.
-Автозапуск на Linux — через systemd-сервис, например:
+Запуск вручную: python3 bot.py (остановка — Ctrl+C).
 
-    [Unit]
-    Description=Poetry site Telegram bot
-    After=network.target
+Автозапуск не зависит от терминалов — через systemd-сервис.
+Готовый unit-файл лежит в репозитории (bot/poetry-bot.service):
 
-    [Service]
-    WorkingDirectory=/путь/к/poetry_site
-    EnvironmentFile=/путь/к/poetry_site/bot/.env
-    ExecStart=/путь/к/poetry_site/bot/.venv/bin/python /путь/к/poetry_site/bot/bot.py
-    Restart=always
+    sudo cp bot/poetry-bot.service /etc/systemd/system/
+    sudo systemctl daemon-reload
+    sudo systemctl enable --now poetry-bot
 
-    [Install]
-    WantedBy=multi-user.target
+Проверка и логи:
+    systemctl status poetry-bot
+    journalctl -u poetry-bot -f
+
+Изменения конфигурации (bot/.env или код) после правок:
+    sudo systemctl restart poetry-bot
+
+На Linux/WSL2 сервис стартует вместе с системой. Учтите: если это
+WSL на Windows, виртуальная машина останавливается при завершении
+работы Windows — тогда бот поднимется при первом запуске WSL
+(открытии любого терминала). Круглосуточная работа независимо от
+компьютера требует VPS: склонируйте репозиторий там, повторите
+шаги разделов 1–2 и поставьте этот же сервис.
 
 8. ПРОВЕРКА, ЧТО БОТ НЕ СЛОМАЕТ САЙТ
 ------------------------------------

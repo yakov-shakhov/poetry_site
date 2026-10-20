@@ -1,0 +1,25 @@
+# Systemd-сервис Telegram-бота poetry_site.
+# Установка (в WSL/терминале, из папки репозитория):
+#   sudo cp bot/poetry-bot.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now poetry-bot
+# Статус и логи:
+#   systemctl status poetry-bot
+#   journalctl -u poetry-bot -f
+
+[Unit]
+Description=Poetry site Telegram bot (@poem_editor_bot)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=yakov
+WorkingDirectory=/home/yakov/_projects/tg_bot_admin/poetry_site
+EnvironmentFile=/home/yakov/_projects/tg_bot_admin/poetry_site/bot/.env
+ExecStart=/usr/bin/python3 -u /home/yakov/_projects/tg_bot_admin/poetry_site/bot/bot.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
