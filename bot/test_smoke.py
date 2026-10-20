@@ -176,6 +176,11 @@ async def test_author(tmp):
     # author.js остаётся валидным JS
     text = (tmp / "data" / "author.js").read_text(encoding="utf-8")
     assert text.startswith("window.AUTHOR = {") and text.rstrip().endswith("};")
+    # регрессия: нажатие кнопок «Имя»/«О себе»/ссылки не должно падать (IndexError)
+    for data in ("af:name", "af:bio", "af:link:vk"):
+        c = ctx()
+        u = FakeUpdate(query=FakeQuery(data, FakeMessage()))
+        assert await bot.author_field_cb(u, c) == bot.A_VALUE
     print("author: OK")
 
 

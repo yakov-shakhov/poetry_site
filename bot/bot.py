@@ -670,7 +670,11 @@ async def author_field_cb(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.callback_query.answer()
     field = update.callback_query.data[3:]  # name | bio | link:<key>
     context.user_data["author_field"] = field
-    label = AUTHOR_FIELDS.get(field, "Ссылка «" + field.split(":", 1)[1] + "»")
+    if field in AUTHOR_FIELDS:
+        label = AUTHOR_FIELDS[field]
+    else:
+        key = field.split(":", 1)
+        label = f"Ссылка «{key[1]}»" if len(key) == 2 else field
     await update.callback_query.message.reply_text(f"Отправьте новое значение для «{label}»:")
     return A_VALUE
 
