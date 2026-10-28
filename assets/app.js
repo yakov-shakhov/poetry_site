@@ -309,7 +309,10 @@
       ? '<a href="' + listHref(q, genre, page + 1) + '" title="Следующая страница" aria-label="Следующая страница">→</a>'
       : '<span aria-hidden="true">→</span>');
     return '<nav class="pager" aria-label="Страницы списка">' + links.join("") + '</nav>' +
-      '<p class="pager-hint">Листать также можно стрелками ← → на клавиатуре или свайпами</p>';
+      '<p class="pager-hint">' +
+        '<span class="hint-desktop">Листать также можно стрелками ← → на клавиатуре</span>' +
+        '<span class="hint-mobile">Листать также можно свайпами ← →</span>' +
+      '</p>';
   }
 
   /* ── Страница стихотворения ──────────────────────────── */
