@@ -5,8 +5,10 @@
   var app = document.getElementById("app");
   var ADMIN_KEY = "poetry_admin_poems";
   var PAGE_SIZE = 12;
-  /* Навигация по стихам (←/→, свайпы): prev/next открытого стихотворения. */
+  /* Навигация по стихам (←/→, свайпы): prev/next открытого стихотворения,
+     либо страница списка на главной. */
   var currentNav = null;
+  var listNav = null;
 
   /* В админке стихи могут быть переопределены в localStorage. */
   function poems() {
@@ -78,6 +80,7 @@
     var pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
     if (page > pages) page = pages;
     var slice = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    listNav = { q: q, genre: genre, page: page, pages: pages };
 
     var a = window.AUTHOR;
     var html =
@@ -283,6 +286,7 @@
        «предыдущий» — более новый, «следующий» — более старый. */
     var prev = list[i - 1], next = list[i + 1];
     currentNav = { prev: prev, next: next };
+    listNav = null;
     app.innerHTML = '<div class="wrap page-center">' +
       '<article class="poem">' +
         '<span class="tag">' + esc(normGenre(p.genre)) + '</span>' +
@@ -348,19 +352,31 @@
     });
   }
 
-  /* ── Листание стихов: стрелки на десктопе, свайпы на мобильных ── */
+  /* ── Листание: стрелки на десктопе, свайпы на мобильных.
+     На странице стиха — соседние стихи, на главной — страницы списка. ── */
   function gotoPoem(p) {
     if (p) location.hash = "#poem/" + p.id;
+  }
+  function gotoPage(n) {
+    if (n < 1 || n > listNav.pages || n === listNav.page) return;
+    location.hash = listHref(listNav.q, listNav.genre, n);
   }
   function typingTarget(el) {
     var tag = (el && el.tagName || "").toLowerCase();
     return tag === "input" || tag === "textarea" || tag === "select";
   }
+  function navLeft() {
+    if (currentNav) gotoPoem(currentNav.prev);
+    else if (listNav) gotoPage(listNav.page - 1);
+  }
+  function navRight() {
+    if (currentNav) gotoPoem(currentNav.next);
+    else if (listNav) gotoPage(listNav.page + 1);
+  }
   document.addEventListener("keydown", function (e) {
-    if (!currentNav || e.altKey || e.ctrlKey || e.metaKey) return;
-    if (typingTarget(e.target)) return;
-    if (e.key === "ArrowLeft") gotoPoem(currentNav.prev);
-    else if (e.key === "ArrowRight") gotoPoem(currentNav.next);
+    if (e.altKey || e.ctrlKey || e.metaKey || typingTarget(e.target)) return;
+    if (e.key === "ArrowLeft") navLeft();
+    else if (e.key === "ArrowRight") navRight();
   });
   var touchX = 0, touchY = 0;
   document.addEventListener("touchstart", function (e) {
@@ -370,13 +386,13 @@
     }
   }, { passive: true });
   document.addEventListener("touchend", function (e) {
-    if (!currentNav || !touchX) return;
+    if ((!currentNav && !listNav) || !touchX) return;
     var dx = e.changedTouches[0].clientX - touchX;
     var dy = e.changedTouches[0].clientY - touchY;
     touchX = 0;
     /* только заведомо горизонтальные жесты, чтобы не мешать прокрутке */
     if (Math.abs(dx) < 60 || Math.abs(dx) < 2 * Math.abs(dy)) return;
-    if (dx < 0) gotoPoem(currentNav.next);
-    else gotoPoem(currentNav.prev);
+    if (dx < 0) navRight();
+    else navLeft();
   }, { passive: true });
 })();
