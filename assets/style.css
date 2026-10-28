@@ -78,6 +78,16 @@ aside .bio { margin: 16px 0 0; font-size: 16px; }
 .btn.icon-btn { display: inline-flex; align-items: center; justify-content: center; padding: 11px; line-height: 0; }
 .btn.icon-btn svg { display: block; }
 
+/* ── Всплывающее уведомление ───────────── */
+.toast {
+  position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 8px);
+  padding: 10px 20px; border-radius: 8px;
+  background: var(--accent); color: var(--card);
+  font: 14px/1.4 Georgia, serif; box-shadow: 0 4px 16px rgba(0, 0, 0, .18);
+  opacity: 0; transition: opacity .3s, transform .3s; pointer-events: none; z-index: 100;
+}
+.toast.visible { opacity: 1; transform: translate(-50%, 0); }
+
 /* ── Поиск и чипсы рубрик ───────────────── */
 .search {
   width: 100%; font: 17px/1 Georgia, serif; padding: 16px 20px;
