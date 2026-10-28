@@ -5,6 +5,8 @@
   var app = document.getElementById("app");
   var ADMIN_KEY = "poetry_admin_poems";
   var PAGE_SIZE = 12;
+  /* Навигация по стихам (←/→, свайпы): prev/next открытого стихотворения. */
+  var currentNav = null;
 
   /* В админке стихи могут быть переопределены в localStorage. */
   function poems() {
@@ -54,6 +56,7 @@
   /* ── Главная: портрет + поток карточек ───────────────── */
   function renderHome(params) {
     var all = poems().slice().sort(byDateDesc);
+    currentNav = null; // навигация стрелками/свайпами — только на странице стиха
     var q = (params.get("q") || "").trim();
     var ql = q.toLowerCase();
     var genre = params.get("genre") || "";
@@ -279,6 +282,7 @@
     /* Список отсортирован от новых к старым — это и есть порядок чтения:
        «предыдущий» — более новый, «следующий» — более старый. */
     var prev = list[i - 1], next = list[i + 1];
+    currentNav = { prev: prev, next: next };
     app.innerHTML = '<div class="wrap page-center">' +
       '<article class="poem">' +
         '<span class="tag">' + esc(normGenre(p.genre)) + '</span>' +
@@ -293,6 +297,7 @@
       '</article>' +
       '<nav class="poem-nav">' +
         (prev ? '<a href="#poem/' + esc(prev.id) + '">← ' + esc(prev.title) + '</a>' : '<span></span>') +
+        '<span class="poem-pos">' + (i + 1) + ' из ' + list.length + '</span>' +
         (next ? '<a href="#poem/' + esc(next.id) + '">' + esc(next.title) + ' →</a>' : '') +
       '</nav>' +
       '<p><a class="back-link" href="#poems">← ко всем стихам</a></p>';
@@ -342,4 +347,36 @@
       sharePage(location.href);
     });
   }
+
+  /* ── Листание стихов: стрелки на десктопе, свайпы на мобильных ── */
+  function gotoPoem(p) {
+    if (p) location.hash = "#poem/" + p.id;
+  }
+  function typingTarget(el) {
+    var tag = (el && el.tagName || "").toLowerCase();
+    return tag === "input" || tag === "textarea" || tag === "select";
+  }
+  document.addEventListener("keydown", function (e) {
+    if (!currentNav || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (typingTarget(e.target)) return;
+    if (e.key === "ArrowLeft") gotoPoem(currentNav.prev);
+    else if (e.key === "ArrowRight") gotoPoem(currentNav.next);
+  });
+  var touchX = 0, touchY = 0;
+  document.addEventListener("touchstart", function (e) {
+    if (e.touches.length === 1) {
+      touchX = e.touches[0].clientX;
+      touchY = e.touches[0].clientY;
+    }
+  }, { passive: true });
+  document.addEventListener("touchend", function (e) {
+    if (!currentNav || !touchX) return;
+    var dx = e.changedTouches[0].clientX - touchX;
+    var dy = e.changedTouches[0].clientY - touchY;
+    touchX = 0;
+    /* только заведомо горизонтальные жесты, чтобы не мешать прокрутке */
+    if (Math.abs(dx) < 60 || Math.abs(dx) < 2 * Math.abs(dy)) return;
+    if (dx < 0) gotoPoem(currentNav.next);
+    else gotoPoem(currentNav.prev);
+  }, { passive: true });
 })();

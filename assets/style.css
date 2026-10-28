@@ -176,6 +176,14 @@ article.poem {
   background: var(--card); border: 1px solid var(--line); border-radius: 12px;
   box-shadow: var(--shadow);
   padding: 44px 52px; margin: 40px auto; max-width: 860px;
+  animation: poem-in .4s ease both;
+}
+@keyframes poem-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  article.poem { animation: none; }
 }
 article.poem .tag { font-size: 13px; }
 article.poem h2 { font-size: 32px; margin: 18px 0 4px; letter-spacing: .02em; line-height: 1.3; }
@@ -199,6 +207,7 @@ article.poem pre.text {
   margin: 36px auto 0; max-width: 860px; flex-wrap: wrap;
 }
 .poem-nav a { font-size: 15px; }
+.poem-pos { color: var(--muted); font-size: 14px; align-self: center; white-space: nowrap; }
 .back-link { display: inline-block; margin: 26px auto 60px; max-width: 860px; font-size: 15px; }
 .page-center { max-width: 860px; margin: 0 auto; }
 
