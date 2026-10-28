@@ -276,7 +276,9 @@
       return;
     }
     var p = list[i];
-    var prev = list[i + 1], next = list[i - 1];
+    /* Список отсортирован от новых к старым — это и есть порядок чтения:
+       «предыдущий» — более новый, «следующий» — более старый. */
+    var prev = list[i - 1], next = list[i + 1];
     app.innerHTML = '<div class="wrap page-center">' +
       '<article class="poem">' +
         '<span class="tag">' + esc(normGenre(p.genre)) + '</span>' +
@@ -287,8 +289,6 @@
           '<button class="poem-share" id="poemShareBtn" type="button" title="Поделиться" aria-label="Поделиться">' +
             '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>' +
           '</button>' +
-          (p.url ? '<span>Опубликовано на <a href="' + esc(p.url) +
-                   '" target="_blank" rel="noopener">Стихи.ру</a></span>' : '') +
         '</div>' +
       '</article>' +
       '<nav class="poem-nav">' +
