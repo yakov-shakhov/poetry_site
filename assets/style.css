@@ -10,6 +10,24 @@
   --shadow: 0 2px 16px rgba(60, 45, 20, .08);
 }
 
+/* ── Тёмная тема ───────────────────────── */
+html[data-theme="dark"] {
+  --bg: #221c16;
+  --card: #2c241c;
+  --ink: #ece3d3;
+  --muted: #a3947e;
+  --accent: #cf8a5b;
+  --accent-dark: #e3a97e;
+  --line: #40362a;
+  --chip: #3a2f22;
+  --shadow: 0 2px 16px rgba(0, 0, 0, .35);
+}
+html[data-theme="dark"] .admin-form input[type=text],
+html[data-theme="dark"] .admin-form textarea,
+html[data-theme="dark"] .admin-form select { background: #1d1812; }
+html[data-theme="dark"] .notice { background: #322b44; border-color: #4a3f66; }
+html[data-theme="dark"] .notice b { color: #b9a8e8; }
+
 * { box-sizing: border-box; }
 
 body {
@@ -42,6 +60,17 @@ header.site .wrap {
 nav.main { display: flex; gap: 30px; font-size: 16px; }
 nav.main a { color: var(--muted); }
 nav.main a.active, nav.main a:hover { color: var(--accent); }
+
+/* ── Переключатель темы ────────────────── */
+.theme-toggle {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: none; border: 1px solid var(--line); border-radius: 8px;
+  color: var(--muted); cursor: pointer; padding: 7px; line-height: 0;
+}
+.theme-toggle:hover { color: var(--accent); border-color: var(--accent); }
+.theme-toggle .icon-sun { display: none; }
+html[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+html[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
 
 /* ── Сетка: слева портрет, справа поток ── */
 .layout {
@@ -213,7 +242,8 @@ footer.site {
 
 @media (max-width: 640px) {
   .wrap { padding: 0 18px; }
-  header.site .wrap { padding-top: 12px; padding-bottom: 12px; justify-content: center; }
+  header.site .wrap { padding-top: 12px; padding-bottom: 12px; justify-content: center; position: relative; }
+  .theme-toggle { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); }
   .logo { font-size: 22px; }
   nav.main { gap: 18px; font-size: 15px; }
   aside { max-width: none; }

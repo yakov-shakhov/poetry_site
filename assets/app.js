@@ -274,4 +274,14 @@
 
   window.addEventListener("hashchange", route);
   route();
+
+  /* ── Переключатель светлой/тёмной темы ──── */
+  var themeBtn = document.getElementById("themeToggle");
+  if (themeBtn) {
+    themeBtn.addEventListener("click", function () {
+      var next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+      try { localStorage.setItem("theme", next); } catch (e) {}
+    });
+  }
 })();
