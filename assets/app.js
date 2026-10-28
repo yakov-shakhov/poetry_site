@@ -395,4 +395,20 @@
     if (dx < 0) navRight();
     else navLeft();
   }, { passive: true });
+
+  /* ── Кнопка «наверх» (на странице стихотворения) ── */
+  var toTop = document.createElement("button");
+  toTop.className = "to-top";
+  toTop.type = "button";
+  toTop.title = "Наверх";
+  toTop.setAttribute("aria-label", "Наверх");
+  toTop.innerHTML =
+    '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
+  toTop.addEventListener("click", function () {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+  document.body.appendChild(toTop);
+  window.addEventListener("scroll", function () {
+    toTop.classList.toggle("visible", !!currentNav && window.scrollY > 400);
+  }, { passive: true });
 })();
