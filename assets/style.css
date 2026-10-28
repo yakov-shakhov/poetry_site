@@ -118,20 +118,6 @@ aside .bio { margin: 16px 0 0; font-size: 16px; }
 }
 .toast.visible { opacity: 1; transform: translate(-50%, 0); }
 
-/* ── Кнопка «наверх» ───────────────────── */
-.to-top {
-  position: fixed; right: 22px; bottom: 22px; z-index: 50;
-  width: 42px; height: 42px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--card); color: var(--muted);
-  border: 1px solid var(--line); box-shadow: var(--shadow);
-  cursor: pointer; line-height: 0; padding: 0;
-  opacity: 0; pointer-events: none; transform: translateY(8px);
-  transition: opacity .25s, transform .25s;
-}
-.to-top.visible { opacity: 1; pointer-events: auto; transform: none; }
-.to-top:hover { color: var(--accent); border-color: var(--accent); }
-
 /* ── Поиск и чипсы рубрик ───────────────── */
 .search {
   width: 100%; font: 17px/1 Georgia, serif; padding: 16px 20px;
@@ -216,6 +202,8 @@ article.poem pre.text {
   color: var(--muted); cursor: pointer; padding: 6px; line-height: 0;
 }
 .poem-share:hover { color: var(--accent); border-color: var(--accent); }
+/* кнопка «наверх» — в правом углу строки, над стрелкой «→» навигации */
+.poem-share.to-top { margin-left: auto; }
 .poem-nav {
   display: flex; justify-content: space-between; gap: 12px;
   margin: 36px auto 0; max-width: 860px; flex-wrap: wrap;

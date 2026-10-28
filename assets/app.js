@@ -297,6 +297,9 @@
           '<button class="poem-share" id="poemShareBtn" type="button" title="Поделиться" aria-label="Поделиться">' +
             '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>' +
           '</button>' +
+          '<button class="poem-share to-top" id="toTopBtn" type="button" title="Наверх" aria-label="Наверх">' +
+            '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>' +
+          '</button>' +
         '</div>' +
       '</article>' +
       '<nav class="poem-nav">' +
@@ -309,6 +312,12 @@
     if (poemShare) {
       poemShare.addEventListener("click", function () {
         sharePage(location.href);
+      });
+    }
+    var toTop = document.getElementById("toTopBtn");
+    if (toTop) {
+      toTop.addEventListener("click", function () {
+        window.scrollTo({ top: 0, behavior: "smooth" });
       });
     }
   }
@@ -394,21 +403,5 @@
     if (Math.abs(dx) < 60 || Math.abs(dx) < 2 * Math.abs(dy)) return;
     if (dx < 0) navRight();
     else navLeft();
-  }, { passive: true });
-
-  /* ── Кнопка «наверх» (на странице стихотворения) ── */
-  var toTop = document.createElement("button");
-  toTop.className = "to-top";
-  toTop.type = "button";
-  toTop.title = "Наверх";
-  toTop.setAttribute("aria-label", "Наверх");
-  toTop.innerHTML =
-    '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>';
-  toTop.addEventListener("click", function () {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  });
-  document.body.appendChild(toTop);
-  window.addEventListener("scroll", function () {
-    toTop.classList.toggle("visible", !!currentNav && window.scrollY > 400);
   }, { passive: true });
 })();
