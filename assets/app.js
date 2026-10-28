@@ -130,27 +130,38 @@
         }).catch(function () { /* буфер недоступен — остаётся обычный mailto */ });
       });
     }
-    /* На мобильных веб-страница t.me может не открываться — сначала пробуем
-       установленное приложение через tg://, при неудаче отдаём веб-версию. */
+    /* Сначала пробуем установленное приложение через tg://, при неудаче
+       отдаём веб-версию t.me (веб-страница t.me может не открываться). */
     var tgBtn = document.getElementById("tgBtn");
     if (tgBtn) {
       tgBtn.addEventListener("click", function (e) {
-        if (!window.matchMedia || !window.matchMedia("(pointer: coarse)").matches) return;
-        e.preventDefault();
         var user = a.links.telegram.replace(/^https?:\/\/t\.me\//, "");
-        var wentHidden = false; // страница ушла в фон — значит, приложение открылось
+        var coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+        var url = "tg://resolve?domain=" + user;
+        e.preventDefault();
+        var wentAway = false; // страница ушла в фон — значит, приложение открылось
         document.addEventListener("visibilitychange", function onHide() {
-          wentHidden = document.hidden;
+          if (document.hidden) wentAway = true;
           document.removeEventListener("visibilitychange", onHide);
         });
-        var f = document.createElement("iframe");
-        f.style.display = "none";
-        f.src = "tg://resolve?domain=" + user;
-        document.body.appendChild(f);
-        setTimeout(function () { f.remove(); }, 2000);
+        /* На десктопе при запуске приложения или показе диалога протокола
+           окно теряет фокус — это тоже считаем «приложение открылось». */
+        window.addEventListener("blur", function onBlur() {
+          wentAway = true;
+          window.removeEventListener("blur", onBlur);
+        });
+        if (coarse) {
+          var f = document.createElement("iframe");
+          f.style.display = "none";
+          f.src = url;
+          document.body.appendChild(f);
+          setTimeout(function () { f.remove(); }, 2000);
+        } else {
+          window.location.href = url;
+        }
         setTimeout(function () {
-          if (!wentHidden) window.open(a.links.telegram, "_blank");
-        }, 1500);
+          if (!wentAway) window.open(a.links.telegram, "_blank");
+        }, coarse ? 1500 : 2000);
       });
     }
   }
