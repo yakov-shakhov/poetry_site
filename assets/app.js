@@ -86,7 +86,7 @@
         '<div class="btns">' +
           '<a class="btn ghost" href="' + esc(a.links.stihi) + '" target="_blank" rel="noopener">Стихи.ру</a>' +
           '<a class="btn ghost" href="' + esc(a.links.vk) + '" target="_blank" rel="noopener">VK</a>' +
-          '<a class="btn ghost icon-btn" href="' + esc(a.links.telegram) + '" target="_blank" rel="noopener" title="Написать автору в Telegram" aria-label="Написать автору в Telegram">' +
+          '<a class="btn ghost icon-btn" id="tgBtn" href="' + esc(a.links.telegram) + '" target="_blank" rel="noopener" title="Написать автору в Telegram" aria-label="Написать автору в Telegram">' +
             '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M9.04 15.51l-.38 5.32c.54 0 .78-.23 1.06-.51l2.55-2.44 5.28 3.87c.97.53 1.66.25 1.92-.9L23.9 3.8c.31-1.43-.52-1.99-1.46-1.64L1.7 10.36c-1.39.54-1.37 1.32-.24 1.67l5.03 1.57L18.8 6.9c.55-.36 1.05-.16.64.2L9.04 15.51z"/></svg>' +
           '</a>' +
           '<a class="btn ghost icon-btn" id="emailBtn" href="mailto:' + esc(a.links.email) + '" title="Написать автору письмо" aria-label="Написать автору письмо">' +
@@ -128,6 +128,29 @@
         navigator.clipboard.writeText(a.links.email).then(function () {
           showToast("Адрес скопирован: " + a.links.email);
         }).catch(function () { /* буфер недоступен — остаётся обычный mailto */ });
+      });
+    }
+    /* На мобильных веб-страница t.me может не открываться — сначала пробуем
+       установленное приложение через tg://, при неудаче отдаём веб-версию. */
+    var tgBtn = document.getElementById("tgBtn");
+    if (tgBtn) {
+      tgBtn.addEventListener("click", function (e) {
+        if (!window.matchMedia || !window.matchMedia("(pointer: coarse)").matches) return;
+        e.preventDefault();
+        var user = a.links.telegram.replace(/^https?:\/\/t\.me\//, "");
+        var wentHidden = false; // страница ушла в фон — значит, приложение открылось
+        document.addEventListener("visibilitychange", function onHide() {
+          wentHidden = document.hidden;
+          document.removeEventListener("visibilitychange", onHide);
+        });
+        var f = document.createElement("iframe");
+        f.style.display = "none";
+        f.src = "tg://resolve?domain=" + user;
+        document.body.appendChild(f);
+        setTimeout(function () { f.remove(); }, 2000);
+        setTimeout(function () {
+          if (!wentHidden) window.open(a.links.telegram, "_blank");
+        }, 1500);
       });
     }
   }
