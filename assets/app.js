@@ -42,6 +42,12 @@
     return (g || "без рубрики").trim() || "без рубрики";
   }
 
+  /* Только дата публикации — время на карточке и странице стиха не нужно. */
+  function showDate(d) {
+    var m = /^(\d{2}\.\d{2}\.\d{4})/.exec(d || "");
+    return m ? m[1] : String(d || "");
+  }
+
   /* Короткая выдержка: первые строки стихотворения. */
   function excerpt(text) {
     var lines = String(text || "").split("\n").filter(function (l) { return l.trim(); });
@@ -280,7 +286,7 @@
         '<span class="tag">' + esc(normGenre(p.genre)) + '</span>' +
         '<h3><a href="#poem/' + esc(p.id) + '">' + esc(p.title) + '</a></h3>' +
         '<p>' + esc(excerpt(p.text)) + '</p>' +
-        '<div class="foot"><span>' + esc(p.date || "") + '</span>' +
+        '<div class="foot"><span>' + esc(showDate(p.date)) + '</span>' +
           '<a href="#poem/' + esc(p.id) + '">Читать →</a></div>' +
       '</article>';
     }).join("") + '</div>';
@@ -340,7 +346,7 @@
       '<article class="poem">' +
         '<span class="tag">' + esc(normGenre(p.genre)) + '</span>' +
         '<h2>' + esc(p.title) + '</h2>' +
-        '<div class="meta">' + esc(p.date || "") + '</div>' +
+        '<div class="meta">' + esc(showDate(p.date)) + '</div>' +
         '<pre class="text">' + esc(p.text) + '</pre>' +
         '<div class="source-link">' +
           '<button class="poem-share" id="poemShareBtn" type="button" title="Поделиться" aria-label="Поделиться">' +
@@ -415,6 +421,8 @@
     themeBtn.addEventListener("click", function () {
       var next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
       document.documentElement.setAttribute("data-theme", next);
+      var mt = document.querySelector('meta[name="theme-color"]');
+      if (mt) mt.content = next === "dark" ? "#221c16" : "#f4eee2";
       try { localStorage.setItem("theme", next); } catch (e) {}
     });
   }

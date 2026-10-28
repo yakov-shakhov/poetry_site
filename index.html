@@ -8,6 +8,8 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Яков Шахов — стихи</title>
   <meta name="description" content="Стихи Якова Шахова: философская, городская, любовная, пейзажная и гражданская лирика, переводы, сонеты, басни.">
+  <!-- Цвет адресной строки мобильного браузера под тему сайта -->
+  <meta name="theme-color" content="#f4eee2">
   <!-- Превью ссылки в соцсетях и мессенджерах -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Яков Шахов — стихи">
@@ -28,6 +30,8 @@
         t = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
       }
       document.documentElement.setAttribute("data-theme", t);
+      var mt = document.querySelector('meta[name="theme-color"]');
+      if (mt) mt.content = t === "dark" ? "#221c16" : "#f4eee2";
     })();
   </script>
   <link rel="stylesheet" href="assets/style.css">
