@@ -166,17 +166,36 @@
     }
   }
 
-  /* Небольшое всплывающее уведомление внизу страницы. */
+  /* Небольшое всплывающее уведомление внизу страницы (в одном экземпляре). */
   function showToast(text) {
-    var t = document.createElement("div");
-    t.className = "toast";
+    var t = document.querySelector(".toast");
+    if (!t) {
+      t = document.createElement("div");
+      t.className = "toast";
+      document.body.appendChild(t);
+      setTimeout(function () { t.classList.add("visible"); }, 10);
+    }
     t.textContent = text;
-    document.body.appendChild(t);
-    setTimeout(function () { t.classList.add("visible"); }, 10);
-    setTimeout(function () {
+    clearTimeout(t._hideTimer);
+    clearTimeout(t._removeTimer);
+    t._hideTimer = setTimeout(function () {
       t.classList.remove("visible");
-      setTimeout(function () { t.remove(); }, 300);
+      t._removeTimer = setTimeout(function () { t.remove(); }, 300);
     }, 2500);
+  }
+
+  /* Поделиться текущей страницей: ссылка в буфер + системное меню «Поделиться». */
+  function sharePage(url) {
+    if (navigator.share) {
+      navigator.share({ title: document.title, url: url }).catch(function () { /* пользователь отменил */ });
+    } else {
+      showToast("Меню «Поделиться» недоступно в этом браузере — ссылка скопирована");
+    }
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(function () {
+        showToast("Ссылка скопирована: " + url);
+      }).catch(function () { /* буфер недоступен */ });
+    }
   }
 
   /* Строка о трёх самых многочисленных рубриках. */
@@ -243,15 +262,25 @@
         '<h2>' + esc(p.title) + '</h2>' +
         '<div class="meta">' + esc(p.date || "") + '</div>' +
         '<pre class="text">' + esc(p.text) + '</pre>' +
-        (p.url ? '<div class="source-link">Опубликовано на <a href="' + esc(p.url) +
-                 '" target="_blank" rel="noopener">Стихи.ру</a></div>' : '') +
+        '<div class="source-link">' +
+          '<button class="poem-share" id="poemShareBtn" type="button" title="Поделиться" aria-label="Поделиться">' +
+            '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>' +
+          '</button>' +
+          (p.url ? '<span>Опубликовано на <a href="' + esc(p.url) +
+                   '" target="_blank" rel="noopener">Стихи.ру</a></span>' : '') +
+        '</div>' +
       '</article>' +
       '<nav class="poem-nav">' +
         (prev ? '<a href="#poem/' + esc(prev.id) + '">← ' + esc(prev.title) + '</a>' : '<span></span>') +
         (next ? '<a href="#poem/' + esc(next.id) + '">' + esc(next.title) + ' →</a>' : '') +
       '</nav>' +
-      '<p><a class="back-link" href="#poems">← ко всем стихам</a></p>' +
-    '</div>';
+      '<p><a class="back-link" href="#poems">← ко всем стихам</a></p>';
+    var poemShare = document.getElementById("poemShareBtn");
+    if (poemShare) {
+      poemShare.addEventListener("click", function () {
+        sharePage(location.href);
+      });
+    }
   }
 
   /* ── Маршрутизация по хешу ───────────────────────────── */
@@ -282,6 +311,14 @@
       var next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
       document.documentElement.setAttribute("data-theme", next);
       try { localStorage.setItem("theme", next); } catch (e) {}
+    });
+  }
+
+  /* ── Кнопка «Поделиться» в шапке ────────── */
+  var shareBtn = document.getElementById("shareBtn");
+  if (shareBtn) {
+    shareBtn.addEventListener("click", function () {
+      sharePage(location.href);
     });
   }
 })();

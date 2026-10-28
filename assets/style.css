@@ -68,6 +68,7 @@ nav.main a.active, nav.main a:hover { color: var(--accent); }
   color: var(--muted); cursor: pointer; padding: 7px; line-height: 0;
 }
 .theme-toggle:hover { color: var(--accent); border-color: var(--accent); }
+.header-actions { display: flex; gap: 8px; }
 .theme-toggle .icon-sun { display: none; }
 html[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
 html[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
@@ -183,7 +184,16 @@ article.poem pre.text {
   font: inherit; white-space: pre-wrap; margin: 0;
   font-size: 18px; line-height: 1.75;
 }
-.source-link { font-size: 14px; color: var(--muted); margin-top: 28px; }
+.source-link {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 14px; color: var(--muted); margin-top: 28px;
+}
+.poem-share {
+  display: inline-flex; align-items: center; justify-content: center;
+  background: none; border: 1px solid var(--line); border-radius: 8px;
+  color: var(--muted); cursor: pointer; padding: 6px; line-height: 0;
+}
+.poem-share:hover { color: var(--accent); border-color: var(--accent); }
 .poem-nav {
   display: flex; justify-content: space-between; gap: 12px;
   margin: 36px auto 0; max-width: 860px; flex-wrap: wrap;
@@ -243,7 +253,7 @@ footer.site {
 @media (max-width: 640px) {
   .wrap { padding: 0 18px; }
   header.site .wrap { padding-top: 12px; padding-bottom: 12px; justify-content: center; position: relative; }
-  .theme-toggle { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); }
+  .header-actions { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); }
   .logo { font-size: 22px; }
   nav.main { gap: 18px; font-size: 15px; }
   aside { max-width: none; }
