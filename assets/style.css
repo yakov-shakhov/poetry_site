@@ -75,6 +75,8 @@ aside .bio { margin: 16px 0 0; font-size: 16px; }
 .btn.danger { border-color: #a33; background: transparent; color: #a33; }
 .btn.danger:hover { background: #a33; color: #fff; }
 .btn.small { padding: 6px 14px; font-size: 14px; }
+.btn.icon-btn { display: inline-flex; align-items: center; justify-content: center; padding: 11px; line-height: 0; }
+.btn.icon-btn svg { display: block; }
 
 /* ── Поиск и чипсы рубрик ───────────────── */
 .search {

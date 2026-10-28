@@ -84,9 +84,14 @@
         '<p class="role">' + esc(a.bio) + '</p>' +
         '<p class="bio">' + esc(topGenresLine(genres, all.length)) + '</p>' +
         '<div class="btns">' +
-          '<a class="btn" href="#poems" id="readBtn">Читать стихи</a>' +
           '<a class="btn ghost" href="' + esc(a.links.stihi) + '" target="_blank" rel="noopener">Стихи.ру</a>' +
           '<a class="btn ghost" href="' + esc(a.links.vk) + '" target="_blank" rel="noopener">VK</a>' +
+          '<a class="btn ghost icon-btn" href="' + esc(a.links.telegram) + '" target="_blank" rel="noopener" title="Написать автору в Telegram" aria-label="Написать автору в Telegram">' +
+            '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M9.04 15.51l-.38 5.32c.54 0 .78-.23 1.06-.51l2.55-2.44 5.28 3.87c.97.53 1.66.25 1.92-.9L23.9 3.8c.31-1.43-.52-1.99-1.46-1.64L1.7 10.36c-1.39.54-1.37 1.32-.24 1.67l5.03 1.57L18.8 6.9c.55-.36 1.05-.16.64.2L9.04 15.51z"/></svg>' +
+          '</a>' +
+          '<a class="btn ghost icon-btn" href="mailto:' + esc(a.links.email) + '" title="Написать автору письмо" aria-label="Написать автору письмо">' +
+            '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 6l-10 7L2 6"/></svg>' +
+          '</a>' +
         '</div>' +
       '</aside>' +
       '<main>' +
@@ -114,14 +119,6 @@
     document.getElementById("searchForm").addEventListener("submit", function (e) {
       e.preventDefault();
       location.hash = listHref(this.q.value.trim(), this.genre ? this.genre.value : "", 1);
-    });
-    document.getElementById("readBtn").addEventListener("click", function (e) {
-      e.preventDefault();
-      var el = app.querySelector(".search");
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-        el.focus({ preventScroll: true });
-      }
     });
   }
 
