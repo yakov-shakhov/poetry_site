@@ -124,10 +124,7 @@
     var emailBtn = document.getElementById("emailBtn");
     if (emailBtn) {
       emailBtn.addEventListener("click", function () {
-        if (!navigator.clipboard) return;
-        navigator.clipboard.writeText(a.links.email).then(function () {
-          showToast("Адрес скопирован: " + a.links.email);
-        }).catch(function () { /* буфер недоступен — остаётся обычный mailto */ });
+        copyText(a.links.email, "Адрес скопирован: " + a.links.email);
       });
     }
     /* Сначала пробуем установленное приложение через tg://, при неудаче
@@ -184,17 +181,41 @@
     }, 2500);
   }
 
-  /* Поделиться текущей страницей: ссылка в буфер + системное меню «Поделиться». */
+  /* Копирование в буфер: Clipboard API, при отказе — запасной execCommand
+     (нужен, в частности, когда системное меню «Поделиться» уводит фокус со страницы). */
+  function copyText(text, okMsg) {
+    function fallback() {
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = document.execCommand("copy");
+        document.body.removeChild(ta);
+        showToast(ok ? okMsg : "Не удалось скопировать: " + text);
+      } catch (e) {
+        showToast("Не удалось скопировать: " + text);
+      }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () {
+        showToast(okMsg);
+      }).catch(fallback);
+    } else {
+      fallback();
+    }
+  }
+
+  /* Поделиться текущей страницей: сначала копия ссылки, затем системное меню
+     («Поделиться» уводит фокус со страницы — после него буфер уже не сработает). */
   function sharePage(url) {
+    copyText(url, "Ссылка скопирована: " + url);
     if (navigator.share) {
       navigator.share({ title: document.title, url: url }).catch(function () { /* пользователь отменил */ });
     } else {
-      showToast("Меню «Поделиться» недоступно в этом браузере — ссылка скопирована");
-    }
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(url).then(function () {
-        showToast("Ссылка скопирована: " + url);
-      }).catch(function () { /* буфер недоступен */ });
+      showToast("Меню «Поделиться» в этом браузере недоступно");
     }
   }
 

@@ -252,7 +252,8 @@ footer.site {
 
 @media (max-width: 640px) {
   .wrap { padding: 0 18px; }
-  header.site .wrap { padding-top: 12px; padding-bottom: 12px; justify-content: center; position: relative; }
+  /* правый отступ — чтобы «Стихи» не налезали на кнопки в правом углу */
+  header.site .wrap { padding-top: 12px; padding-bottom: 12px; padding-right: 108px; justify-content: center; position: relative; }
   .header-actions { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); }
   .logo { font-size: 22px; }
   nav.main { gap: 18px; font-size: 15px; }
