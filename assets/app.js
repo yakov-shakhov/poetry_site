@@ -9,6 +9,10 @@
      либо страница списка на главной. */
   var currentNav = null;
   var listNav = null;
+  /* Последнее состояние списка — для ссылки «ко всем стихам»
+     и восстановления прокрутки после возврата со страницы стиха. */
+  var lastList = null;
+  var savedListScroll = null;
 
   /* В админке стихи могут быть переопределены в localStorage. */
   function poems() {
@@ -55,6 +59,28 @@
     return "#poems" + (parts.length ? "?" + parts.join("&") : "");
   }
 
+  /* Чипсы рубрик. На мобильных видны первые, остальные открывает
+     кнопка «ещё …» (класс expanded вешается на контейнер). */
+  var CHIPS_VISIBLE = 9; /* вместе с «все» */
+  function chipsHtml(q, genre, genres) {
+    var html = '<a href="' + listHref(q, "", 1) + '"' + (genre ? "" : ' class="active"') + '>все</a>';
+    var hidden = 0;
+    genres.forEach(function (g, i) {
+      var extra = i + 1 >= CHIPS_VISIBLE;
+      if (extra) hidden++;
+      var cls = [];
+      if (g === genre) cls.push("active");
+      if (extra) cls.push("extra");
+      html += '<a href="' + listHref(q, g, 1) + '"' +
+        (cls.length ? ' class="' + cls.join(" ") + '"' : '') + '>' + esc(g) + '</a>';
+    });
+    if (hidden) {
+      html += '<button type="button" class="chips-toggle" id="chipsToggle" data-hidden="' + hidden +
+        '" aria-expanded="false">ещё ' + hidden + ' рубрик…</button>';
+    }
+    return html;
+  }
+
   /* ── Главная: портрет + поток карточек ───────────────── */
   function renderHome(params) {
     var all = poems().slice().sort(byDateDesc);
@@ -81,6 +107,7 @@
     if (page > pages) page = pages;
     var slice = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
     listNav = { q: q, genre: genre, page: page, pages: pages };
+    lastList = { q: q, genre: genre, page: page };
 
     var a = window.AUTHOR;
     var html =
@@ -103,13 +130,10 @@
       '<main>' +
         '<form id="searchForm">' +
           (genre ? '<input type="hidden" name="genre" value="' + esc(genre) + '">' : '') +
-          '<input class="search" type="search" name="q" placeholder="Поиск по ' + all.length + ' стихотворениям…" value="' + esc(q) + '">' +
+          '<input class="search" type="search" name="q" aria-label="Поиск по стихотворениям" placeholder="Поиск по ' + all.length + ' стихотворениям…" value="' + esc(q) + '">' +
         '</form>' +
-        '<div class="chips">' +
-          '<a href="' + listHref(q, "", 1) + '"' + (genre ? "" : ' class="active"') + '>все</a>' +
-          genres.map(function (g) {
-            return '<a href="' + listHref(q, g, 1) + '"' + (g === genre ? ' class="active"' : '') + '>' + esc(g) + '</a>';
-          }).join("") +
+        '<div class="chips' + (genre ? ' expanded' : '') + '">' +
+          chipsHtml(q, genre, genres) +
         '</div>' +
         '<p class="count">' +
           (q || genre
@@ -126,6 +150,16 @@
       e.preventDefault();
       location.hash = listHref(this.q.value.trim(), this.genre ? this.genre.value : "", 1);
     });
+    /* «ещё N рубрик…» — показать/скрыть остальные чипсы (только мобильные). */
+    var chipsToggle = document.getElementById("chipsToggle");
+    if (chipsToggle) {
+      chipsToggle.addEventListener("click", function () {
+        var chips = document.querySelector(".chips");
+        var expanded = chips.classList.toggle("expanded");
+        this.setAttribute("aria-expanded", expanded ? "true" : "false");
+        this.textContent = expanded ? "свернуть рубрики" : "ещё " + this.getAttribute("data-hidden") + " рубрик…";
+      });
+    }
     /* mailto молчит, если почтовая программа не настроена — дублируем адрес в буфер обмена. */
     var emailBtn = document.getElementById("emailBtn");
     if (emailBtn) {
@@ -242,7 +276,7 @@
       return '<div class="empty">Ничего не найдено. Измените условия поиска.</div>';
     }
     return '<div class="cards">' + list.map(function (p) {
-      return '<article class="card">' +
+      return '<article class="card" data-href="#poem/' + esc(p.id) + '">' +
         '<span class="tag">' + esc(normGenre(p.genre)) + '</span>' +
         '<h3><a href="#poem/' + esc(p.id) + '">' + esc(p.title) + '</a></h3>' +
         '<p>' + esc(excerpt(p.text)) + '</p>' +
@@ -252,7 +286,8 @@
     }).join("") + '</div>';
   }
 
-  /* Компактная пагинация: 1 2 3 … N. */
+  /* Компактная пагинация: ← 1 2 3 … N →; листать также можно стрелками
+     клавиатуры и свайпами (подсказка под номерами). */
   function pagerHtml(total, page, pages, q, genre) {
     if (pages <= 1) return "";
     var nums = [];
@@ -262,14 +297,24 @@
     for (var i = from; i <= to; i++) nums.push(i);
     if (to < pages - 1) nums.push("…");
     if (to < pages) nums.push(pages);
-    return '<nav class="pager">' + nums.map(function (n) {
-      if (n === "…") return "<span>…</span>";
-      return '<a href="' + listHref(q, genre, n) + '"' + (n === page ? ' class="active"' : '') + '>' + n + '</a>';
-    }).join("") + '</nav>';
+    var links = [];
+    links.push(page > 1
+      ? '<a href="' + listHref(q, genre, page - 1) + '" title="Предыдущая страница" aria-label="Предыдущая страница">←</a>'
+      : '<span aria-hidden="true">←</span>');
+    nums.forEach(function (n) {
+      if (n === "…") { links.push("<span>…</span>"); return; }
+      links.push('<a href="' + listHref(q, genre, n) + '"' + (n === page ? ' class="active"' : '') + '>' + n + '</a>');
+    });
+    links.push(page < pages
+      ? '<a href="' + listHref(q, genre, page + 1) + '" title="Следующая страница" aria-label="Следующая страница">→</a>'
+      : '<span aria-hidden="true">→</span>');
+    return '<nav class="pager" aria-label="Страницы списка">' + links.join("") + '</nav>' +
+      '<p class="pager-hint">Листать также можно стрелками ← → на клавиатуре или свайпами</p>';
   }
 
   /* ── Страница стихотворения ──────────────────────────── */
   function renderPoem(id) {
+    document.title = "Яков Шахов — стихи"; /* будет заменён названием ниже */
     var list = poems().slice().sort(byDateDesc);
     var i = -1;
     for (var k = 0; k < list.length; k++) {
@@ -282,6 +327,7 @@
       return;
     }
     var p = list[i];
+    document.title = p.title + " — Яков Шахов — стихи";
     /* Список отсортирован от новых к старым — это и есть порядок чтения:
        «предыдущий» — более новый, «следующий» — более старый. */
     var prev = list[i - 1], next = list[i + 1];
@@ -307,7 +353,9 @@
         '<span class="poem-pos">' + (i + 1) + ' из ' + list.length + '</span>' +
         (next ? '<a href="#poem/' + esc(next.id) + '">' + esc(next.title) + ' →</a>' : '') +
       '</nav>' +
-      '<p><a class="back-link" href="#poems">← ко всем стихам</a></p>';
+      '<p><a class="back-link" href="' +
+        (lastList ? listHref(lastList.q, lastList.genre, lastList.page) : "#poems") +
+      '">← ко всем стихам</a></p>';
     var poemShare = document.getElementById("poemShareBtn");
     if (poemShare) {
       poemShare.addEventListener("click", function () {
@@ -324,6 +372,11 @@
 
   /* ── Маршрутизация по хешу ───────────────────────────── */
   function route() {
+    /* Состояние уходящего представления: уходим со списка — запоминаем
+       прокрутку, чтобы вернуть её при возврате «ко всем стихам». */
+    var outgoingIsList = !currentNav && !!listNav;
+    var outgoingListKey = outgoingIsList ? listNav.q + "|" + listNav.genre + "|" + listNav.page : null;
+    var outgoingScrollY = window.scrollY;
     var h = location.hash.replace(/^#\/?/, "");
     var section = decodeURIComponent(h.split(/[/?]/)[0] || "") || "home";
     var nav = document.querySelectorAll("nav.main a");
@@ -333,11 +386,21 @@
 
     if (h.indexOf("poem/") === 0) {
       renderPoem(h.slice(5));
+      window.scrollTo(0, 0);
     } else {
       var params = new URLSearchParams(h.split("?")[1] || "");
       renderHome(params);
+      document.title = "Яков Шахов — стихи";
+      var key = listNav.q + "|" + listNav.genre + "|" + listNav.page;
+      if (!outgoingIsList && savedListScroll && savedListScroll.key === key) {
+        window.scrollTo(0, savedListScroll.y); /* возврат со стиха */
+      } else {
+        window.scrollTo(0, 0);
+      }
     }
-    window.scrollTo(0, 0);
+    if (outgoingListKey) {
+      savedListScroll = { key: outgoingListKey, y: outgoingScrollY };
+    }
   }
 
   window.addEventListener("hashchange", route);
@@ -386,6 +449,13 @@
     if (e.altKey || e.ctrlKey || e.metaKey || typingTarget(e.target)) return;
     if (e.key === "ArrowLeft") navLeft();
     else if (e.key === "ArrowRight") navRight();
+  });
+  /* Клик по карточке открывает стих; клики по ссылкам внутри — нет. */
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest) return;
+    var card = e.target.closest(".card[data-href]");
+    if (!card || e.target.closest("a, button")) return;
+    location.hash = card.getAttribute("data-href");
   });
   var touchX = 0, touchY = 0;
   document.addEventListener("touchstart", function (e) {

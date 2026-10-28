@@ -80,6 +80,11 @@ html[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
   align-items: start;
 }
 
+/* Портрет сопровождает прокрутку списка */
+@media (min-width: 981px) {
+  aside { position: sticky; top: 92px; }
+}
+
 /* ── Портретная колонка ────────────────── */
 aside .portrait {
   aspect-ratio: 4 / 5; overflow: hidden;
@@ -132,6 +137,13 @@ aside .bio { margin: 16px 0 0; font-size: 16px; }
 }
 .chips a:hover { border-color: var(--accent); color: var(--accent); }
 .chips a.active { background: var(--accent); border-color: var(--accent); color: var(--card); }
+/* на мобильных показываем первые рубрики, остальные — по кнопке «ещё …» */
+.chips-toggle {
+  display: none; font: 15px/1 Georgia, serif; padding: 10px 18px; border-radius: 20px;
+  background: transparent; border: 1px dashed var(--line); color: var(--muted); cursor: pointer;
+}
+.chips-toggle:hover { border-color: var(--accent); color: var(--accent); }
+.pager-hint { text-align: center; color: var(--muted); font-size: 13px; margin: 12px 0 0; }
 
 .count { color: var(--muted); font-size: 15px; margin: 0 0 18px; }
 
@@ -142,6 +154,7 @@ aside .bio { margin: 16px 0 0; font-size: 16px; }
   padding: 26px; display: flex; flex-direction: column;
   transition: box-shadow .15s;
 }
+.card[data-href] { cursor: pointer; }
 .card:hover { box-shadow: var(--shadow); }
 .tag {
   align-self: flex-start; font: 13px/1 Georgia, serif; padding: 7px 14px; border-radius: 14px;
@@ -269,7 +282,23 @@ footer.site {
   .logo { font-size: 22px; }
   nav.main { gap: 18px; font-size: 15px; }
   aside { max-width: none; }
-  aside h1 { font-size: 30px; }
+  /* компактный блок автора: фото слева, имя и роль справа — чтобы стихи
+     начинались с первого-второго экрана, а не с четвёртого */
+  aside {
+    display: grid;
+    grid-template-columns: 110px 1fr;
+    grid-template-areas: "photo name" "photo role" "bio bio" "btns btns";
+    column-gap: 18px;
+    align-items: center;
+  }
+  aside .portrait { grid-area: photo; aspect-ratio: 1 / 1; border-radius: 12px; outline: none; border: 1px solid var(--line); }
+  aside h1 { grid-area: name; font-size: 26px; margin: 0; }
+  aside .role { grid-area: role; margin: 2px 0 0; }
+  aside .bio { grid-area: bio; margin: 14px 0 0; font-size: 15px; }
+  .btns { grid-area: btns; margin-top: 16px; }
+  .chips a.extra { display: none; }
+  .chips.expanded a.extra { display: inline-block; }
+  .chips-toggle { display: inline-block; }
   .search { padding: 14px 16px; }
   .card { padding: 20px; }
   .card h3 { font-size: 20px; }
