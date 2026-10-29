@@ -326,7 +326,7 @@
     }
     return '<div class="cards">' + list.map(function (p) {
       return '<article class="card" data-href="#poem/' + esc(p.id) + '">' +
-        '<span class="tag">' + esc(normGenre(p.genre)) + '</span>' +
+        '<a class="tag" href="' + listHref("", normGenre(p.genre), 1) + '">' + esc(normGenre(p.genre)) + '</a>' +
         '<h3><a href="#poem/' + esc(p.id) + '">' + esc(p.title) + '</a></h3>' +
         '<p>' + esc(excerpt(p.text)) + '</p>' +
         '<div class="foot"><span>' + esc(showDate(p.date)) + '</span>' +
@@ -387,7 +387,7 @@
     listNav = null;
     app.innerHTML = '<div class="wrap page-center">' +
       '<article class="poem">' +
-        '<span class="tag">' + esc(normGenre(p.genre)) + '</span>' +
+        '<a class="tag" href="' + listHref("", normGenre(p.genre), 1) + '">' + esc(normGenre(p.genre)) + '</a>' +
         '<h2>' + esc(p.title) + '</h2>' +
         '<div class="meta">' + esc(showDate(p.date)) + '</div>' +
         '<pre class="text">' + esc(p.text) + '</pre>' +
