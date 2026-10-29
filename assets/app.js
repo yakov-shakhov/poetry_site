@@ -113,21 +113,23 @@
     return "#poems" + (parts.length ? "?" + parts.join("&") : "");
   }
 
-  /* Чипсы рубрик. На мобильных видны первые, остальные открывает
+  /* Чипсы рубрик: по популярности (убывание числа стихов), при равенстве —
+     по алфавиту. На мобильных видны первые, остальные открывает
      кнопка «ещё …» (класс expanded вешается на контейнер). */
   var CHIPS_VISIBLE = 9; /* вместе с «все» */
-  function chipsHtml(q, genre, genres) {
+  function chipsHtml(q, genre, genres, counts) {
     var html = '<a href="' + listHref(q, "", 1) + '"' +
       (genre ? "" : ' class="active" aria-current="true"') + '>все</a>';
     var hidden = 0;
     genres.forEach(function (g, i) {
       var extra = i + 1 >= CHIPS_VISIBLE;
       if (extra) hidden++;
-      var cls = [];
-      if (g === genre) { cls.push("active"); cls.push('aria-current="true"'); }
-      if (extra) cls.push("extra");
+      var classes = [];
+      if (g === genre) classes.push("active");
+      if (extra) classes.push("extra");
       html += '<a href="' + listHref(q, g, 1) + '"' +
-        (cls.length ? " " + cls.join(" ") : '') + '>' + esc(g) + '</a>';
+        (classes.length ? ' class="' + classes.join(" ") + '"' : '') +
+        (g === genre ? ' aria-current="true"' : '') + '>' + esc(g) + '</a>';
     });
     if (hidden) {
       html += '<button type="button" class="chips-toggle" id="chipsToggle" data-hidden="' + hidden +
@@ -136,10 +138,27 @@
     return html;
   }
 
+  /* Рубрики с количеством стихов: по убыванию популярности,
+     при равенстве — по алфавиту. */
+  function genreInfo(all) {
+    var counts = {};
+    var genres = [];
+    all.forEach(function (p) {
+      var g = normGenre(p.genre);
+      if (!counts[g]) { counts[g] = 0; genres.push(g); }
+      counts[g]++;
+    });
+    genres.sort(function (a, b) {
+      var d = counts[b] - counts[a];
+      return d !== 0 ? d : a.localeCompare(b, "ru");
+    });
+    return { genres: genres, counts: counts };
+  }
+
   /* Внутренность блока результатов: чипсы, счётчик, карточки, пагинация.
      Используется при начальном рендере и при живом поиске;
      заодно обновляет listNav/lastList (стрелки, свайпы, «ко всем стихам»). */
-  function resultsInner(qStr, genre, page, all, genres) {
+  function resultsInner(qStr, genre, page, all) {
     var t = (qStr || "").trim();
     var filtered = filterPoems(all, genre, normText(t));
     var pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -147,8 +166,9 @@
     var slice = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
     listNav = { q: t, genre: genre, page: page, pages: pages };
     lastList = { q: t, genre: genre, page: page };
+    var gi = genreInfo(all);
     return '<div class="chips' + (genre ? ' expanded' : '') + '">' +
-        chipsHtml(t, genre, genres) +
+        chipsHtml(t, genre, gi.genres, gi.counts) +
       '</div>' +
       '<p class="count">' +
         (t || genre
@@ -166,13 +186,6 @@
     var q = (params.get("q") || "").trim();
     var genre = params.get("genre") || "";
     var page = Math.max(1, parseInt(params.get("page"), 10) || 1);
-
-    var genres = [];
-    all.forEach(function (p) {
-      var g = normGenre(p.genre);
-      if (genres.indexOf(g) === -1) genres.push(g);
-    });
-    genres.sort(function (a, b) { return a.localeCompare(b, "ru"); });
 
     var a = window.AUTHOR;
     var html =
@@ -202,7 +215,7 @@
           (genre ? '<input type="hidden" name="genre" value="' + esc(genre) + '">' : '') +
           '<input class="search" type="search" name="q" aria-label="Поиск по стихотворениям" placeholder="Поиск по ' + all.length + ' стихотворениям…" value="' + esc(q) + '">' +
         '</form>' +
-        '<div id="results">' + resultsInner(q, genre, page, all, genres) + '</div>' +
+        '<div id="results">' + resultsInner(q, genre, page, all) + '</div>' +
       '</main>';
 
     app.innerHTML = '<div class="wrap layout">' + html + '</div>';
@@ -215,7 +228,7 @@
     function applyLive(value) {
       var results = document.getElementById("results");
       if (!results) return;
-      results.innerHTML = resultsInner(value, genre, 1, all, genres);
+      results.innerHTML = resultsInner(value, genre, 1, all);
       bindChipsToggle();
       var target = listHref((value || "").trim(), genre, 1);
       if (location.hash !== target) history.replaceState(null, "", target);
