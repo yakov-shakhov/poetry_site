@@ -114,16 +114,15 @@
   }
 
   /* Чипсы рубрик: по популярности (убывание числа стихов), при равенстве —
-     по алфавиту. На мобильных — одна строка; листается кнопками ‹ ›. */
-  var CHEVRON_L = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>';
-  var CHEVRON_R = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18l6-6-6-6"/></svg>';
+     по алфавиту. На мобильных — одна строка с горизонтальным скроллом. */
   function chipsHtml(q, genre, genres, counts) {
     var html = '<a href="' + listHref(q, "", 1) + '"' +
       (genre ? "" : ' class="active" aria-current="true"') + '>все</a>';
-    genres.forEach(function (g) {
+    genres.forEach(function (g, i) {
       var classes = [];
       if (g === genre) classes.push("active");
-      /* суффикс « лирика» прячется на мобильных у всех рубрик */
+      if (i === 0) classes.push("first-genre");
+      /* суффикс « лирика» прячется на мобильных у всех, кроме первой рубрики */
       var mSx = /^(.+) лирика$/.exec(g);
       var label = mSx
         ? esc(mSx[1]) + '<span class="sx">' + esc(" лирика") + '</span>'
@@ -164,10 +163,8 @@
     listNav = { q: t, genre: genre, page: page, pages: pages };
     lastList = { q: t, genre: genre, page: page };
     var gi = genreInfo(all);
-    return '<div class="chips-nav">' +
-        '<button type="button" class="chips-arrow" data-dir="-1" aria-label="Рубрики назад">' + CHEVRON_L + '</button>' +
-        '<div class="chips">' + chipsHtml(t, genre, gi.genres, gi.counts) + '</div>' +
-        '<button type="button" class="chips-arrow" data-dir="1" aria-label="Рубрики вперёд">' + CHEVRON_R + '</button>' +
+    return '<div class="chips">' +
+        chipsHtml(t, genre, gi.genres, gi.counts) +
       '</div>' +
       '<p class="count' + ((t || genre) ? "" : " no-filter") + '">' +
         (t || genre
@@ -228,7 +225,6 @@
       var results = document.getElementById("results");
       if (!results) return;
       results.innerHTML = resultsInner(value, genre, 1, all);
-      bindChipsNav();
       var target = listHref((value || "").trim(), genre, 1);
       if (location.hash !== target) history.replaceState(null, "", target);
     }
@@ -243,25 +239,6 @@
       applyLive(searchInput.value);
       window.scrollTo(0, 0);
     });
-    /* ‹ › листают строку рубрик (мобильные); на границах кнопки гаснут. */
-    function bindChipsNav() {
-      var row = document.querySelector(".chips");
-      if (!row) return;
-      document.querySelectorAll(".chips-arrow").forEach(function (btn) {
-        btn.addEventListener("click", function () {
-          row.scrollBy({ left: 220 * Number(this.getAttribute("data-dir")), behavior: "smooth" });
-        });
-      });
-      var updateArrows = function () {
-        var l = document.querySelector(".chips-arrow[data-dir='-1']");
-        var r = document.querySelector(".chips-arrow[data-dir='1']");
-        if (l) l.disabled = row.scrollLeft <= 0;
-        if (r) r.disabled = row.scrollLeft >= row.scrollWidth - row.clientWidth - 1;
-      };
-      row.addEventListener("scroll", updateArrows, { passive: true });
-      updateArrows();
-    }
-    bindChipsNav();
     var randomBtn = document.getElementById("randomBtn");
     if (randomBtn) randomBtn.addEventListener("click", gotoRandomPoem);
     /* mailto молчит, если почтовая программа не настроена — дублируем адрес в буфер обмена. */

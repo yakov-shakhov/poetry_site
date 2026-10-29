@@ -35,9 +35,6 @@ body {
   background: var(--bg);
   color: var(--ink);
   font: 17px/1.65 Georgia, "Times New Roman", serif;
-  /* страницу нельзя панорамировать вбок; в отличие от hidden
-     не создаёт скролл-контейнер и не ломает position: sticky */
-  overflow-x: clip;
 }
 
 a { color: var(--accent); text-decoration: none; }
@@ -161,9 +158,7 @@ aside .bio { margin: 16px 0 0; font-size: 16px; }
   background: var(--card); color: var(--ink);
 }
 .search:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
-.chips { display: flex; flex-wrap: wrap; gap: 10px; margin: 22px 0 30px; padding: 0; list-style: none; overscroll-behavior-x: contain; }
-/* ‹ › для листания строки рубрик — видны только на мобильных */
-.chips-arrow { display: none; }
+.chips { display: flex; flex-wrap: wrap; gap: 10px; margin: 22px 0 30px; padding: 0; list-style: none; }
 .chips a {
   font: 15px/1 Georgia, serif; padding: 10px 18px; border-radius: 20px;
   background: var(--card); border: 1px solid var(--line); color: var(--muted);
@@ -363,29 +358,19 @@ footer.site {
   .btns { grid-area: btns; margin-top: 12px; }
   /* «Случайный стих» без кубика — помещается в одну строку с VK/TG/почтой */
   .btn.random svg { display: none; }
-  /* суффикс « лирика» у чипсов: прячем у всех рубрик */
+  /* суффикс « лирика» у чипсов: прячем у всех, кроме первой рубрики */
   .chips a .sx { display: none; }
-  /* одна строка рубрик с листанием кнопками ‹ › */
-  .chips-nav { display: flex; align-items: center; gap: 8px; margin: 14px 0 16px; }
+  .chips a.first-genre .sx { display: inline; }
+  /* одна строка с горизонтальным скроллом вместо переноса на 2–3 ряда */
   .chips {
-    flex: 1; min-width: 0;
     flex-wrap: nowrap;
     overflow-x: auto;
-    margin: 0;
+    margin: 14px 0 16px;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: none; /* Firefox */
   }
   .chips::-webkit-scrollbar { display: none; }
   .chips a { flex-shrink: 0; white-space: nowrap; }
-  .chips-arrow {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 32px; height: 32px; flex-shrink: 0; padding: 0; line-height: 0;
-    background: var(--card); border: 1px solid var(--line); border-radius: 8px;
-    color: var(--muted); cursor: pointer;
-  }
-  .chips-arrow:hover { color: var(--accent); border-color: var(--accent); }
-  .chips-arrow:disabled { opacity: .35; cursor: default; }
-  .chips-arrow:disabled:hover { color: var(--muted); border-color: var(--line); }
   /* ужимаем вертикаль, чтобы первая карточка попадала в первый экран */
   .search { padding: 12px 14px; }
   .count { margin: 0 0 14px; }
