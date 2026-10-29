@@ -181,6 +181,9 @@ aside .bio { margin: 16px 0 0; font-size: 16px; }
 
 .count { color: var(--muted); font-size: 15px; margin: 0 0 18px; }
 
+/* Подсветка совпадений при живом поиске */
+mark { background: none; color: var(--accent); font-weight: bold; padding: 0; }
+
 /* ── Карточки стихов ───────────────────── */
 .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
 .card {
