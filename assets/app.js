@@ -114,9 +114,16 @@
   }
 
   /* Чипсы рубрик: по популярности (убывание числа стихов), при равенстве —
-     по алфавиту. На мобильных видны первые, остальные открывает
-     кнопка «ещё …» (класс expanded вешается на контейнер). */
-  var CHIPS_VISIBLE = 9; /* вместе с «все» */
+     по алфавиту. На мобильных видны первые три, остальные открывает
+     кнопка «Ещё N жанров» (класс expanded вешается на контейнер). */
+  var CHIPS_VISIBLE = 4; /* вместе с «все» */
+  /* «1 жанр / 2 жанра / 5 жанров» для кнопки «Ещё N …» */
+  function plural(n, one, few, many) {
+    var n10 = n % 10, n100 = n % 100;
+    if (n10 === 1 && n100 !== 11) return one;
+    if (n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20)) return few;
+    return many;
+  }
   function chipsHtml(q, genre, genres, counts) {
     var html = '<a href="' + listHref(q, "", 1) + '"' +
       (genre ? "" : ' class="active" aria-current="true"') + '>все</a>';
@@ -127,8 +134,7 @@
       var classes = [];
       if (g === genre) classes.push("active");
       if (extra) classes.push("extra");
-      if (i === 0) classes.push("first-genre");
-      /* суффикс « лирика» прячется на мобильных у всех, кроме первой рубрики */
+      /* суффикс « лирика» прячется на мобильных у всех рубрик */
       var mSx = /^(.+) лирика$/.exec(g);
       var label = mSx
         ? esc(mSx[1]) + '<span class="sx">' + esc(" лирика") + '</span>'
@@ -139,7 +145,8 @@
     });
     if (hidden) {
       html += '<button type="button" class="chips-toggle" id="chipsToggle" data-hidden="' + hidden +
-        '" aria-expanded="false">ещё ' + hidden + ' рубрик…</button>';
+        '" aria-expanded="false">Ещё ' + hidden + ' ' +
+        plural(hidden, "жанр", "жанра", "жанров") + '</button>';
     }
     return html;
   }
@@ -259,7 +266,8 @@
           var chips = document.querySelector(".chips");
           var expanded = chips.classList.toggle("expanded");
           this.setAttribute("aria-expanded", expanded ? "true" : "false");
-          this.textContent = expanded ? "свернуть рубрики" : "ещё " + this.getAttribute("data-hidden") + " рубрик…";
+          var n = Number(this.getAttribute("data-hidden"));
+          this.textContent = expanded ? "Свернуть" : "Ещё " + n + " " + plural(n, "жанр", "жанра", "жанров");
         });
       }
     }

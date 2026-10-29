@@ -366,7 +366,6 @@ footer.site {
   .btn.random svg { display: none; }
   /* суффикс « лирика» у чипсов: прячем у всех, кроме первой рубрики */
   .chips a .sx { display: none; }
-  .chips a.first-genre .sx { display: inline; }
   .chips a.extra { display: none; }
   .chips.expanded a.extra { display: inline-block; }
   .chips-toggle { display: inline-block; }
