@@ -437,6 +437,8 @@
        прокрутку, чтобы вернуть её при возврате «ко всем стихам».
        Уход по логотипу («#home») — всегда «с чистого листа», не запоминаем. */
     var outgoingIsList = h !== "home" && !currentNav && !!listNav;
+    var outgoingListKey = outgoingIsList ? listNav.q + "|" + listNav.genre + "|" + listNav.page : null;
+    var outgoingScrollY = window.scrollY;
     var section = decodeURIComponent(h.split(/[/?]/)[0] || "") || "home";
     var nav = document.querySelectorAll("nav.main a");
     nav.forEach(function (a) {
