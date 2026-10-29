@@ -432,12 +432,11 @@
 
   /* ── Маршрутизация по хешу ───────────────────────────── */
   function route() {
-    /* Состояние уходящего представления: уходим со списка — запоминаем
-       прокрутку, чтобы вернуть её при возврате «ко всем стихам». */
-    var outgoingIsList = !currentNav && !!listNav;
-    var outgoingListKey = outgoingIsList ? listNav.q + "|" + listNav.genre + "|" + listNav.page : null;
-    var outgoingScrollY = window.scrollY;
     var h = location.hash.replace(/^#\/?/, "");
+    /* Состояние уходящего представления: уходим со списка — запоминаем
+       прокрутку, чтобы вернуть её при возврате «ко всем стихам».
+       Уход по логотипу («#home») — всегда «с чистого листа», не запоминаем. */
+    var outgoingIsList = h !== "home" && !currentNav && !!listNav;
     var section = decodeURIComponent(h.split(/[/?]/)[0] || "") || "home";
     var nav = document.querySelectorAll("nav.main a");
     nav.forEach(function (a) {
@@ -448,11 +447,15 @@
       renderPoem(h.slice(5));
       window.scrollTo(0, 0);
     } else {
+      /* «#home» — явный путь «на главную» (логотип): без фильтров
+         и без восстановления прокрутки, всегда с чистого листа. */
+      var goingHome = h === "home";
+      if (goingHome) savedListScroll = null;
       var params = new URLSearchParams(h.split("?")[1] || "");
       renderHome(params);
       document.title = "Яков Шахов — стихи";
       var key = listNav.q + "|" + listNav.genre + "|" + listNav.page;
-      if (!outgoingIsList && savedListScroll && savedListScroll.key === key) {
+      if (!goingHome && !outgoingIsList && savedListScroll && savedListScroll.key === key) {
         window.scrollTo(0, savedListScroll.y); /* возврат со стиха */
       } else {
         window.scrollTo(0, 0);
@@ -465,6 +468,17 @@
 
   window.addEventListener("hashchange", route);
   route();
+
+  /* Логотип: если мы уже на «#home», хеш не меняется и route не сработает —
+     прокручиваем наверх вручную (переход по клику всё равно сбрасывает фильтры). */
+  var logo = document.querySelector(".logo");
+  if (logo) {
+    logo.addEventListener("click", function () {
+      if (location.hash === "#home" || location.hash === "" || location.hash === "#") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    });
+  }
 
   /* ── Переключатель светлой/тёмной темы ──── */
   var themeBtn = document.getElementById("themeToggle");
