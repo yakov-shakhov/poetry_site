@@ -95,6 +95,9 @@ def date_key(d):
 
 def save(poems):
     poems.sort(key=lambda p: date_key(p.get("date")), reverse=True)
+    # ссылка на stihi.ru нужна только при импорте — в данные сайта не пишем
+    for p in poems:
+        p.pop("url", None)
     DATA_FILE.write_text(
         "window.POEMS = " +
         json.dumps(poems, ensure_ascii=False, indent=1) + ";\n",
