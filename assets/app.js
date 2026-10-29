@@ -127,9 +127,15 @@
       var classes = [];
       if (g === genre) classes.push("active");
       if (extra) classes.push("extra");
+      if (i === 0) classes.push("first-genre");
+      /* суффикс « лирика» прячется на мобильных у всех, кроме первой рубрики */
+      var mSx = /^(.+) лирика$/.exec(g);
+      var label = mSx
+        ? esc(mSx[1]) + '<span class="sx">' + esc(" лирика") + '</span>'
+        : esc(g);
       html += '<a href="' + listHref(q, g, 1) + '"' +
         (classes.length ? ' class="' + classes.join(" ") + '"' : '') +
-        (g === genre ? ' aria-current="true"' : '') + '>' + esc(g) + '</a>';
+        (g === genre ? ' aria-current="true"' : '') + '>' + label + '</a>';
     });
     if (hidden) {
       html += '<button type="button" class="chips-toggle" id="chipsToggle" data-hidden="' + hidden +
@@ -170,7 +176,7 @@
     return '<div class="chips' + (genre ? ' expanded' : '') + '">' +
         chipsHtml(t, genre, gi.genres, gi.counts) +
       '</div>' +
-      '<p class="count">' +
+      '<p class="count' + ((t || genre) ? "" : " no-filter") + '">' +
         (t || genre
           ? "Найдено: " + filtered.length + " из " + all.length
           : "Всего произведений: " + all.length) +

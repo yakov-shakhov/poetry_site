@@ -360,12 +360,22 @@ footer.site {
   aside .portrait { grid-area: photo; aspect-ratio: 1 / 1; border-radius: 12px; outline: none; border: 1px solid var(--line); }
   aside .portrait img { object-position: 50% 0; } /* кадрируем низ, а не макушку */
   aside .role { grid-area: role; margin: 0; }
-  aside .bio { grid-area: bio; margin: 14px 0 0; font-size: 15px; }
-  .btns { grid-area: btns; margin-top: 16px; }
+  aside .bio { grid-area: bio; margin: 12px 0 0; font-size: 15px; }
+  .btns { grid-area: btns; margin-top: 12px; }
+  /* «Случайный стих» без кубика — помещается в одну строку с VK/TG/почтой */
+  .btn.random svg { display: none; }
+  /* суффикс « лирика» у чипсов: прячем у всех, кроме первой рубрики */
+  .chips a .sx { display: none; }
+  .chips a.first-genre .sx { display: inline; }
   .chips a.extra { display: none; }
   .chips.expanded a.extra { display: inline-block; }
   .chips-toggle { display: inline-block; }
-  .search { padding: 14px 16px; }
+  /* ужимаем вертикаль, чтобы первая карточка попадала в первый экран */
+  .chips { margin: 14px 0 16px; }
+  .search { padding: 12px 14px; }
+  .count { margin: 0 0 14px; }
+  .count.no-filter { display: none; } /* дублирует строку био «196 стихотворений…» */
+  .cards { gap: 16px; }
   .card { padding: 20px; }
   .card h3 { font-size: 20px; }
   article.poem { padding: 26px 20px; margin: 24px 0; }
