@@ -429,7 +429,7 @@
     var copyBtn = document.getElementById("copyPoemBtn");
     if (copyBtn) {
       copyBtn.addEventListener("click", function () {
-        copyText(p.title + "\n\n" + p.text + "\n\n" + a.name, "Стихотворение скопировано");
+        copyText(p.title.toUpperCase() + "\n\n" + p.text + "\n\n" + a.name, "Стихотворение скопировано");
       });
     }
     var randomLink = document.getElementById("randomLink");
