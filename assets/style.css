@@ -214,6 +214,12 @@ article.poem pre.text {
   font: inherit; white-space: pre-wrap; margin: 0;
   font-size: 18px; line-height: 1.75;
 }
+/* подпись автора под текстом стихотворения */
+.poem-sign {
+  margin-top: 30px; text-align: right;
+  color: var(--muted); font-size: 15px;
+  font-variant: small-caps; letter-spacing: .08em;
+}
 .source-link {
   display: flex; align-items: center; gap: 12px;
   font-size: 14px; color: var(--muted); margin-top: 28px;

@@ -379,6 +379,7 @@
       return;
     }
     var p = list[i];
+    var a = window.AUTHOR;
     document.title = p.title + " — Яков Шахов — стихи";
     /* Список отсортирован от новых к старым — это и есть порядок чтения:
        «предыдущий» — более новый, «следующий» — более старый. */
@@ -391,9 +392,13 @@
         '<h2>' + esc(p.title) + '</h2>' +
         '<div class="meta">' + esc(showDate(p.date)) + '</div>' +
         '<pre class="text">' + esc(p.text) + '</pre>' +
+        '<div class="poem-sign">' + esc(a.name) + '</div>' +
         '<div class="source-link">' +
           '<button class="poem-share" id="poemShareBtn" type="button" title="Поделиться" aria-label="Поделиться">' +
             '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>' +
+          '</button>' +
+          '<button class="poem-share" id="copyPoemBtn" type="button" title="Копировать текст" aria-label="Копировать текст">' +
+            '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>' +
           '</button>' +
           '<button class="poem-share to-top" id="toTopBtn" type="button" title="Наверх" aria-label="Наверх">' +
             '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>' +
@@ -418,6 +423,13 @@
     if (poemShare) {
       poemShare.addEventListener("click", function () {
         sharePage(location.href);
+      });
+    }
+    /* Копия текста для цитирования: заголовок, текст, подпись автора. */
+    var copyBtn = document.getElementById("copyPoemBtn");
+    if (copyBtn) {
+      copyBtn.addEventListener("click", function () {
+        copyText(p.title + "\n\n" + p.text + "\n\n" + a.name, "Стихотворение скопировано");
       });
     }
     var randomLink = document.getElementById("randomLink");
