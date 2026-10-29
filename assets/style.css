@@ -112,6 +112,8 @@ aside .bio { margin: 16px 0 0; font-size: 16px; }
 .btn.small { padding: 6px 14px; font-size: 14px; }
 .btn.icon-btn { display: inline-flex; align-items: center; justify-content: center; padding: 11px; line-height: 0; }
 .btn.icon-btn svg { display: block; }
+.btn.random { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; }
+.btn.random svg { display: block; flex-shrink: 0; }
 
 /* ── Всплывающее уведомление ───────────── */
 .toast {
@@ -229,7 +231,17 @@ article.poem pre.text {
 }
 .poem-nav a { font-size: 15px; }
 .poem-pos { color: var(--muted); font-size: 14px; align-self: center; white-space: nowrap; }
+/* «Случайный стих» на странице стиха — под навигацией */
+.poem-random { text-align: center; margin: 16px auto 0; max-width: 860px; }
+.random-link {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: none; border: none; padding: 4px 8px; cursor: pointer;
+  color: var(--accent); font: 15px/1 Georgia, serif;
+}
+.random-link:hover { color: var(--accent-dark); }
+.random-link svg { display: block; }
 .back-link { display: inline-block; margin: 26px auto 60px; max-width: 860px; font-size: 15px; }
+.page-center .back-link { display: block; text-align: center; }
 .page-center { max-width: 860px; margin: 0 auto; }
 
 /* ── Разделы ───────────────────────────── */

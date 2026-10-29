@@ -123,6 +123,10 @@
         '<p class="role">' + esc(a.bio) + '</p>' +
         '<p class="bio">' + esc(bioLine(all)) + '</p>' +
         '<div class="btns">' +
+          '<button class="btn random" id="randomBtn" type="button" title="Случайный стих (клавиша R)" aria-label="Случайный стих">' +
+            '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.2" cy="8.2" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.8" cy="8.2" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="8.2" cy="15.8" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.8" cy="15.8" r="1.3" fill="currentColor" stroke="none"/></svg>' +
+            'Случайный стих' +
+          '</button>' +
           '<a class="btn ghost icon-btn" id="vkBtn" href="' + esc(a.links.vk) + '" target="_blank" rel="noopener" title="Паблик ВКонтакте" aria-label="Паблик ВКонтакте">' +
             '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M15.07 2H8.93C3.33 2 2 3.33 2 8.93v6.14C2 20.67 3.33 22 8.93 22h6.14c5.6 0 6.93-1.33 6.93-6.93V8.93C22 3.33 20.67 2 15.07 2m3.08 14.27h-1.46c-.55 0-.72-.44-1.71-1.44-.86-.83-1.24-.94-1.45-.94-.3 0-.38.08-.38.5v1.31c0 .36-.11.57-1.04.57-1.55 0-3.28-.94-4.49-2.69-1.82-2.55-2.32-4.47-2.32-4.85 0-.21.08-.41.5-.41h1.46c.37 0 .51.17.66.57.72 2.09 1.94 3.92 2.44 3.92.19 0 .27-.09.27-.56V9.83c-.06-1.02-.6-1.1-.6-1.46 0-.17.14-.34.36-.34h2.29c.31 0 .42.17.42.54v2.65c0 .34.15.47.25.47.19 0 .35-.13.7-.48 1.08-1.21 1.85-3.07 1.85-3.07.1-.21.27-.41.64-.41h1.46c.44 0 .53.23.44.54-.18.85-1.97 3.37-1.97 3.37-.15.25-.21.36 0 .64.15.21.66.64 1 1.04.62.7 1.1 1.29 1.23 1.7.11.41-.1.62-.51.62"/></svg>' +
           '</a>' +
@@ -157,6 +161,8 @@
       e.preventDefault();
       location.hash = listHref(this.q.value.trim(), this.genre ? this.genre.value : "", 1);
     });
+    var randomBtn = document.getElementById("randomBtn");
+    if (randomBtn) randomBtn.addEventListener("click", gotoRandomPoem);
     /* «ещё N рубрик…» — показать/скрыть остальные чипсы (только мобильные). */
     var chipsToggle = document.getElementById("chipsToggle");
     if (chipsToggle) {
@@ -234,6 +240,16 @@
         }, 1500);
       });
     }
+  }
+
+  /* Случайный стих: прямой переход по хешу — ссылку можно расшарить,
+     «назад» в браузере работает. Открытый стих из выбора исключается. */
+  function gotoRandomPoem() {
+    var list = poems();
+    var m = /^#\/?poem\/(.+)$/.exec(location.hash);
+    var pool = m ? list.filter(function (p) { return p.id !== m[1]; }) : list;
+    if (!pool.length) return;
+    location.hash = "#poem/" + pool[Math.floor(Math.random() * pool.length)].id;
   }
 
   /* Небольшое всплывающее уведомление внизу страницы (в одном экземпляре). */
@@ -343,7 +359,7 @@
       : '<span aria-hidden="true">→</span>');
     return '<nav class="pager" aria-label="Страницы списка">' + links.join("") + '</nav>' +
       '<p class="pager-hint">' +
-        '<span class="hint-desktop">Листать также можно стрелками ← → на клавиатуре</span>' +
+        '<span class="hint-desktop">Листать также можно стрелками ← → на клавиатуре, R — случайный стих</span>' +
         '<span class="hint-mobile">Листать также можно свайпами ← →</span>' +
       '</p>';
   }
@@ -389,6 +405,12 @@
         '<span class="poem-pos">' + (i + 1) + ' из ' + list.length + '</span>' +
         (next ? '<a href="#poem/' + esc(next.id) + '">' + esc(next.title) + ' →</a>' : '') +
       '</nav>' +
+      '<p class="poem-random">' +
+        '<button type="button" class="random-link" id="randomLink" title="Случайный стих (клавиша R)">' +
+          '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.2" cy="8.2" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.8" cy="8.2" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="8.2" cy="15.8" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.8" cy="15.8" r="1.3" fill="currentColor" stroke="none"/></svg>' +
+          'Случайный стих' +
+        '</button>' +
+      '</p>' +
       '<p><a class="back-link" href="' +
         (lastList ? listHref(lastList.q, lastList.genre, lastList.page) : "#poems") +
       '">← ко всем стихам</a></p>';
@@ -398,6 +420,8 @@
         sharePage(location.href);
       });
     }
+    var randomLink = document.getElementById("randomLink");
+    if (randomLink) randomLink.addEventListener("click", gotoRandomPoem);
     var toTop = document.getElementById("toTopBtn");
     if (toTop) {
       toTop.addEventListener("click", function () {
@@ -487,6 +511,8 @@
     if (e.altKey || e.ctrlKey || e.metaKey || typingTarget(e.target)) return;
     if (e.key === "ArrowLeft") navLeft();
     else if (e.key === "ArrowRight") navRight();
+    /* e.code — независимо от раскладки (русская «К» — та же клавиша R) */
+    else if (e.code === "KeyR") gotoRandomPoem();
   });
   /* Клик по карточке открывает стих; клики по ссылкам внутри — нет. */
   document.addEventListener("click", function (e) {
