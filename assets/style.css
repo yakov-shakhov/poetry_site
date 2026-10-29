@@ -165,6 +165,12 @@ aside .bio { margin: 16px 0 0; font-size: 16px; }
 }
 .chips a:hover { border-color: var(--accent); color: var(--accent); }
 .chips a.active { background: var(--accent); border-color: var(--accent); color: var(--card); }
+/* на мобильных показываем первые рубрики, остальные — по кнопке «ещё …» */
+.chips-toggle {
+  display: none; font: 15px/1 Georgia, serif; padding: 10px 18px; border-radius: 20px;
+  background: transparent; border: 1px dashed var(--line); color: var(--muted); cursor: pointer;
+}
+.chips-toggle:hover { border-color: var(--accent); color: var(--accent); }
 .pager-hint { text-align: center; color: var(--muted); font-size: 13px; margin: 12px 0 0; }
 /* на сенсорных — про свайпы, на остальных — про клавиатуру */
 .hint-mobile { display: none; }
@@ -361,17 +367,11 @@ footer.site {
   /* суффикс « лирика» у чипсов: прячем у всех, кроме первой рубрики */
   .chips a .sx { display: none; }
   .chips a.first-genre .sx { display: inline; }
-  /* одна строка с горизонтальным скроллом вместо переноса на 2–3 ряда */
-  .chips {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    margin: 14px 0 16px;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; /* Firefox */
-  }
-  .chips::-webkit-scrollbar { display: none; }
-  .chips a { flex-shrink: 0; white-space: nowrap; }
+  .chips a.extra { display: none; }
+  .chips.expanded a.extra { display: inline-block; }
+  .chips-toggle { display: inline-block; }
   /* ужимаем вертикаль, чтобы первая карточка попадала в первый экран */
+  .chips { margin: 14px 0 16px; }
   .search { padding: 12px 14px; }
   .count { margin: 0 0 14px; }
   .count.no-filter { display: none; } /* дублирует строку био «196 стихотворений…» */

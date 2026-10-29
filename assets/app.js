@@ -114,13 +114,19 @@
   }
 
   /* Чипсы рубрик: по популярности (убывание числа стихов), при равенстве —
-     по алфавиту. На мобильных — одна строка с горизонтальным скроллом. */
+     по алфавиту. На мобильных видны первые, остальные открывает
+     кнопка «ещё …» (класс expanded вешается на контейнер). */
+  var CHIPS_VISIBLE = 9; /* вместе с «все» */
   function chipsHtml(q, genre, genres, counts) {
     var html = '<a href="' + listHref(q, "", 1) + '"' +
       (genre ? "" : ' class="active" aria-current="true"') + '>все</a>';
+    var hidden = 0;
     genres.forEach(function (g, i) {
+      var extra = i + 1 >= CHIPS_VISIBLE;
+      if (extra) hidden++;
       var classes = [];
       if (g === genre) classes.push("active");
+      if (extra) classes.push("extra");
       if (i === 0) classes.push("first-genre");
       /* суффикс « лирика» прячется на мобильных у всех, кроме первой рубрики */
       var mSx = /^(.+) лирика$/.exec(g);
@@ -131,6 +137,10 @@
         (classes.length ? ' class="' + classes.join(" ") + '"' : '') +
         (g === genre ? ' aria-current="true"' : '') + '>' + label + '</a>';
     });
+    if (hidden) {
+      html += '<button type="button" class="chips-toggle" id="chipsToggle" data-hidden="' + hidden +
+        '" aria-expanded="false">ещё ' + hidden + ' рубрик…</button>';
+    }
     return html;
   }
 
@@ -163,7 +173,7 @@
     listNav = { q: t, genre: genre, page: page, pages: pages };
     lastList = { q: t, genre: genre, page: page };
     var gi = genreInfo(all);
-    return '<div class="chips">' +
+    return '<div class="chips' + (genre ? ' expanded' : '') + '">' +
         chipsHtml(t, genre, gi.genres, gi.counts) +
       '</div>' +
       '<p class="count' + ((t || genre) ? "" : " no-filter") + '">' +
@@ -225,6 +235,7 @@
       var results = document.getElementById("results");
       if (!results) return;
       results.innerHTML = resultsInner(value, genre, 1, all);
+      bindChipsToggle();
       var target = listHref((value || "").trim(), genre, 1);
       if (location.hash !== target) history.replaceState(null, "", target);
     }
@@ -239,6 +250,20 @@
       applyLive(searchInput.value);
       window.scrollTo(0, 0);
     });
+    /* «ещё N рубрик…» — показать/скрыть остальные чипсы (только мобильные).
+       Кнопка пересоздаётся при каждой перерисовке результатов — через хелпер. */
+    function bindChipsToggle() {
+      var chipsToggle = document.getElementById("chipsToggle");
+      if (chipsToggle) {
+        chipsToggle.addEventListener("click", function () {
+          var chips = document.querySelector(".chips");
+          var expanded = chips.classList.toggle("expanded");
+          this.setAttribute("aria-expanded", expanded ? "true" : "false");
+          this.textContent = expanded ? "свернуть рубрики" : "ещё " + this.getAttribute("data-hidden") + " рубрик…";
+        });
+      }
+    }
+    bindChipsToggle();
     var randomBtn = document.getElementById("randomBtn");
     if (randomBtn) randomBtn.addEventListener("click", gotoRandomPoem);
     /* mailto молчит, если почтовая программа не настроена — дублируем адрес в буфер обмена. */
