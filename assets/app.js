@@ -69,16 +69,17 @@
      кнопка «ещё …» (класс expanded вешается на контейнер). */
   var CHIPS_VISIBLE = 9; /* вместе с «все» */
   function chipsHtml(q, genre, genres) {
-    var html = '<a href="' + listHref(q, "", 1) + '"' + (genre ? "" : ' class="active"') + '>все</a>';
+    var html = '<a href="' + listHref(q, "", 1) + '"' +
+      (genre ? "" : ' class="active" aria-current="true"') + '>все</a>';
     var hidden = 0;
     genres.forEach(function (g, i) {
       var extra = i + 1 >= CHIPS_VISIBLE;
       if (extra) hidden++;
       var cls = [];
-      if (g === genre) cls.push("active");
+      if (g === genre) { cls.push("active"); cls.push('aria-current="true"'); }
       if (extra) cls.push("extra");
       html += '<a href="' + listHref(q, g, 1) + '"' +
-        (cls.length ? ' class="' + cls.join(" ") + '"' : '') + '>' + esc(g) + '</a>';
+        (cls.length ? " " + cls.join(" ") : '') + '>' + esc(g) + '</a>';
     });
     if (hidden) {
       html += '<button type="button" class="chips-toggle" id="chipsToggle" data-hidden="' + hidden +
@@ -322,7 +323,8 @@
 
   function cardGrid(list) {
     if (!list.length) {
-      return '<div class="empty">Ничего не найдено. Измените условия поиска.</div>';
+      return '<div class="empty">Ничего не найдено. Измените условия поиска.' +
+        '<br><a class="btn small" href="#poems">Сбросить поиск</a></div>';
     }
     return '<div class="cards">' + list.map(function (p) {
       return '<article class="card" data-href="#poem/' + esc(p.id) + '">' +
@@ -352,7 +354,8 @@
       : '<span aria-hidden="true">←</span>');
     nums.forEach(function (n) {
       if (n === "…") { links.push("<span>…</span>"); return; }
-      links.push('<a href="' + listHref(q, genre, n) + '"' + (n === page ? ' class="active"' : '') + '>' + n + '</a>');
+      links.push('<a href="' + listHref(q, genre, n) + '"' +
+        (n === page ? ' class="active" aria-current="page"' : '') + '>' + n + '</a>');
     });
     links.push(page < pages
       ? '<a href="' + listHref(q, genre, page + 1) + '" title="Следующая страница" aria-label="Следующая страница">→</a>'
@@ -494,6 +497,17 @@
     });
   }
 
+  /* Skip-link: не меняем хеш (иначе route сбросит фильтры списка),
+     просто переводим фокус в содержимое. */
+  var skipLink = document.querySelector(".skip-link");
+  if (skipLink) {
+    skipLink.addEventListener("click", function (e) {
+      e.preventDefault();
+      app.focus();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
   /* ── Переключатель светлой/тёмной темы ──── */
   var themeBtn = document.getElementById("themeToggle");
   if (themeBtn) {
@@ -527,6 +541,12 @@
     var tag = (el && el.tagName || "").toLowerCase();
     return tag === "input" || tag === "textarea" || tag === "select";
   }
+  /* Фокус на ссылке/кнопке: стрелки должны листать страницу, а не дёргать
+     навигацию по стихам одновременно с прокруткой сфокусированного элемента. */
+  function pressable(el) {
+    var tag = (el && el.tagName || "").toLowerCase();
+    return tag === "a" || tag === "button";
+  }
   function navLeft() {
     if (currentNav) gotoPoem(currentNav.prev);
     else if (listNav) gotoPage(listNav.page - 1);
@@ -536,11 +556,19 @@
     else if (listNav) gotoPage(listNav.page + 1);
   }
   document.addEventListener("keydown", function (e) {
-    if (e.altKey || e.ctrlKey || e.metaKey || typingTarget(e.target)) return;
+    if (e.altKey || e.ctrlKey || e.metaKey || typingTarget(e.target) ||
+        pressable(document.activeElement)) return;
     if (e.key === "ArrowLeft") navLeft();
     else if (e.key === "ArrowRight") navRight();
     /* e.code — независимо от раскладки (русская «К» — та же клавиша R) */
     else if (e.code === "KeyR") gotoRandomPoem();
+  });
+  /* Клик мышью снимает фокус со ссылки/кнопки (e.detail === 0 — активация
+     с клавиатуры, там фокус сохраняем): стрелки не «прилипают» к нажатому. */
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest || e.detail === 0) return;
+    var el = e.target.closest("a, button");
+    if (el) el.blur();
   });
   /* Клик по карточке открывает стих; клики по ссылкам внутри — нет. */
   document.addEventListener("click", function (e) {
