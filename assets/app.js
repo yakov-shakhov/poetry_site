@@ -29,6 +29,14 @@
       .replace(/"/g, "&quot;");
   }
 
+  /* Цель в Яндекс.Метрике (счётчик подключён в index.html). Если счётчик
+     не загрузился (расширение-блокировщик и т. п.) — тихо ничего не делаем. */
+  function trackGoal(name) {
+    if (typeof window.ym === "function") {
+      window.ym(113918019, "reachGoal", name);
+    }
+  }
+
   function dateKey(d) {
     var m = /^(\d{2})\.(\d{2})\.(\d{4})/.exec(d || "");
     return m ? m[3] + m[2] + m[1] : String(d || "");
@@ -346,6 +354,7 @@
   /* Случайный стих: прямой переход по хешу — ссылку можно расшарить,
      «назад» в браузере работает. Открытый стих из выбора исключается. */
   function gotoRandomPoem() {
+    trackGoal("random_poem");
     var list = poems();
     var m = /^#\/?poem\/(.+)$/.exec(location.hash);
     var pool = m ? list.filter(function (p) { return p.id !== m[1]; }) : list;
@@ -628,6 +637,7 @@
   var shareBtn = document.getElementById("shareBtn");
   if (shareBtn) {
     shareBtn.addEventListener("click", function () {
+      trackGoal("share");
       sharePage(location.href);
     });
   }
