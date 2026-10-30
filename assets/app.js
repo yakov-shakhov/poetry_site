@@ -418,7 +418,8 @@
     }
   }
 
-  /* Строка био: сколько произведений и с каких пор пишутся. */
+  /* Строка био: сколько произведений и с каких пор пишутся.
+     Формулировка короткая специально — на мобильных помещается в одну строку. */
   function bioLine(all) {
     var years = [];
     all.forEach(function (p) {
@@ -426,8 +427,8 @@
       if (m) years.push(m[0]);
     });
     years.sort();
-    var span = years.length > 1 ? " — с " + years[0] + " года по сей день" : "";
-    return all.length + " стихотворений и переводов" + span + ".";
+    var span = years.length > 1 ? " — с " + years[0] + " года" : "";
+    return all.length + " стихов и переводов" + span + ".";
   }
 
   function cardGrid(list, qStr) {
