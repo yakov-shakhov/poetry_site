@@ -278,6 +278,20 @@ article.poem pre.text {
 }
 .poem-nav a { font-size: 15px; }
 .poem-pos { color: var(--muted); font-size: 14px; align-self: center; white-space: nowrap; }
+/* на мобильных вместо названий соседних стихов — компактные кнопки ‹ ›
+   (десктопный вариант .pn-full, мобильный .pn-compact) */
+.pn-compact { display: none; }
+@media (max-width: 640px) {
+  .pn-full { display: none; }
+  .pn-compact {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 46px; height: 40px;
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    font: 400 24px/1 Georgia, "Times New Roman", serif; color: var(--accent);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .pn-compact:active { border-color: var(--accent); }
+}
 /* «Случайный стих» на странице стиха — под навигацией */
 .poem-random { text-align: center; margin: 16px auto 0; max-width: 760px; }
 .random-link {
@@ -421,6 +435,8 @@ footer.site {
   aside .role { grid-area: role; margin: 0; }
   aside .bio { grid-area: bio; margin: 12px 0 0; font-size: 15px; }
   .btns { grid-area: btns; margin-top: 12px; }
+  /* порядок: VK, Telegram, почта, «Случайный стих» — последняя в ряду из четырёх */
+  .btns .btn.random { order: 5; }
   /* «Случайный стих» без кубика — помещается в одну строку с VK/TG/почтой */
   .btn.random svg { display: none; }
   /* суффикс « лирика» у чипсов: прячем у всех, кроме первой рубрики */

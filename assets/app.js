@@ -209,12 +209,20 @@
     var page = Math.max(1, parseInt(params.get("page"), 10) || 1);
 
     var a = window.AUTHOR;
+    /* Био: на десктопе — подробнее (2–3 строки), на мобильных — одна строка.
+       Переключение теми же классами, что и подсказки hint-desktop/hint-mobile. */
+    var bioLong = "Пишу стихи с 2010 года. В этом собрании — " + all.length +
+      " стихотворений и переводов: короткие зарисовки, лирика и большие поэмы. " +
+      "Листайте как книгу, выбирайте рубрику — или доверьтесь случаю и откройте случайное.";
     var html =
       '<aside>' +
         '<div class="portrait"><img src="' + esc(a.photo) + '" alt="' + esc(a.name) + '"></div>' +
         '<h1>' + esc(a.name) + '</h1>' +
         '<p class="role">' + esc(a.bio) + '</p>' +
-        '<p class="bio">' + esc(bioLine(all)) + '</p>' +
+        '<p class="bio">' +
+          '<span class="hint-desktop">' + esc(bioLong) + '</span>' +
+          '<span class="hint-mobile">' + esc(bioLine(all)) + '</span>' +
+        '</p>' +
         '<div class="btns">' +
           '<button class="btn random" id="randomBtn" type="button" title="Случайный стих (клавиша R)" aria-label="Случайный стих">' +
             '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.2" cy="8.2" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.8" cy="8.2" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="8.2" cy="15.8" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.8" cy="15.8" r="1.3" fill="currentColor" stroke="none"/></svg>' +
@@ -523,9 +531,15 @@
         '</div>' +
       '</article>' +
       '<nav class="poem-nav">' +
-        (prev ? '<a href="#poem/' + esc(prev.id) + '">← ' + esc(prev.title) + '</a>' : '<span></span>') +
+        (prev
+          ? '<a class="pn-full" href="#poem/' + esc(prev.id) + '">← ' + esc(prev.title) + '</a>' +
+            '<a class="pn-compact" href="#poem/' + esc(prev.id) + '" aria-label="Предыдущее стихотворение">‹</a>'
+          : '<span></span>') +
         '<span class="poem-pos">' + (i + 1) + ' из ' + list.length + '</span>' +
-        (next ? '<a href="#poem/' + esc(next.id) + '">' + esc(next.title) + ' →</a>' : '') +
+        (next
+          ? '<a class="pn-full" href="#poem/' + esc(next.id) + '">' + esc(next.title) + ' →</a>' +
+            '<a class="pn-compact" href="#poem/' + esc(next.id) + '" aria-label="Следующее стихотворение">›</a>'
+          : '') +
       '</nav>' +
       '<p class="poem-random">' +
         '<button type="button" class="random-link" id="randomLink" title="Случайный стих (клавиша R)">' +
