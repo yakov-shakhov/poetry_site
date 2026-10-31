@@ -535,7 +535,12 @@
       '</p>' +
       '<p><a class="back-link" href="' +
         (lastList ? listHref(lastList.q, lastList.genre, lastList.page) : "#poems") +
-      '">← ко всем стихам</a></p>';
+      '">← ко всем стихам</a></p>' +
+      /* Краевые стрелки листания: видны только на сенсорных экранах (CSS).
+         Подсказывают про свайпы и сами служат тап-целями по краям. */
+      (prev ? '<button type="button" class="edge-nav edge-prev" aria-label="Предыдущее стихотворение">‹</button>' : '') +
+      (next ? '<button type="button" class="edge-nav edge-next" aria-label="Следующее стихотворение">›</button>' : '');
+    swipeHintEl = null; /* DOM перерисован — ссылка на подсказку устарела */
     var poemShare = document.getElementById("poemShareBtn");
     if (poemShare) {
       poemShare.addEventListener("click", function () {
@@ -557,6 +562,11 @@
         window.scrollTo({ top: 0, behavior: "smooth" });
       });
     }
+    var edgePrev = document.querySelector(".edge-nav.edge-prev");
+    if (edgePrev) edgePrev.addEventListener("click", function () { gotoPoem(prev); });
+    var edgeNext = document.querySelector(".edge-nav.edge-next");
+    if (edgeNext) edgeNext.addEventListener("click", function () { gotoPoem(next); });
+    maybeShowSwipeHint();
   }
 
   /* ── Маршрутизация по хешу ───────────────────────────── */
@@ -569,6 +579,8 @@
     var outgoingListKey = outgoingIsList ? listNav.q + "|" + listNav.genre + "|" + listNav.page : null;
     var outgoingScrollY = window.scrollY;
     var section = decodeURIComponent(h.split(/[/?]/)[0] || "") || "home";
+    /* Ушли со страницы стиха, не свайпнув, — подсказку больше не показываем */
+    if (h.indexOf("poem/") !== 0) dismissSwipeHint();
     var nav = document.querySelectorAll("nav.main a");
     nav.forEach(function (a) {
       a.classList.toggle("active", section === a.getAttribute("href").slice(1));
@@ -692,20 +704,58 @@
     if (!card || e.target.closest("a, button")) return;
     location.hash = card.getAttribute("data-href");
   });
+  /* ── Одноразовая подсказка «листайте свайпом» на странице стиха ──
+     Только сенсорные экраны; исчезает после первого свайпа, тапа по ней
+     или через 4 секунды; показывается один раз (localStorage). */
+  var swipeHintEl = null;
+  function dismissSwipeHint() {
+    if (!swipeHintEl) return;
+    if (swipeHintEl.parentNode) swipeHintEl.parentNode.removeChild(swipeHintEl);
+    swipeHintEl = null;
+    try { localStorage.setItem("swipeHintSeen", "1"); } catch (e) {}
+  }
+  function maybeShowSwipeHint() {
+    var seen = false;
+    try { seen = localStorage.getItem("swipeHintSeen") === "1"; } catch (e) {}
+    if (seen || !currentNav || !(currentNav.prev || currentNav.next) ||
+        !(window.matchMedia && window.matchMedia("(pointer: coarse)").matches)) return;
+    var el = document.createElement("div");
+    el.className = "swipe-hint";
+    el.innerHTML = '<span class="swipe-demo" aria-hidden="true"><span class="swipe-dot"></span></span>листайте свайпом';
+    app.appendChild(el);
+    swipeHintEl = el;
+    setTimeout(dismissSwipeHint, 4000);
+  }
   var touchX = 0, touchY = 0;
+  /* Подсветка краевой стрелки в сторону листания (affordance во время жеста) */
+  function lightEdges(dx, dy, absdx) {
+    var l = document.querySelector(".edge-nav.edge-prev");
+    var r = document.querySelector(".edge-nav.edge-next");
+    var lit = absdx > 24 && absdx > Math.abs(dy);
+    if (l) l.classList.toggle("lit", lit && dx > 0);
+    if (r) r.classList.toggle("lit", lit && dx < 0);
+  }
   document.addEventListener("touchstart", function (e) {
     if (e.touches.length === 1) {
       touchX = e.touches[0].clientX;
       touchY = e.touches[0].clientY;
     }
   }, { passive: true });
+  document.addEventListener("touchmove", function (e) {
+    if (!touchX) return;
+    lightEdges(e.touches[0].clientX - touchX,
+               e.touches[0].clientY - touchY,
+               Math.abs(e.touches[0].clientX - touchX));
+  }, { passive: true });
   document.addEventListener("touchend", function (e) {
     if ((!currentNav && !listNav) || !touchX) return;
     var dx = e.changedTouches[0].clientX - touchX;
     var dy = e.changedTouches[0].clientY - touchY;
     touchX = 0;
+    lightEdges(0, 0, 0);
     /* только заведомо горизонтальные жесты, чтобы не мешать прокрутке */
     if (Math.abs(dx) < 60 || Math.abs(dx) < 2 * Math.abs(dy)) return;
+    dismissSwipeHint(); /* жест освоен — больше не показываем */
     if (dx < 0) navRight();
     else navLeft();
   }, { passive: true });
