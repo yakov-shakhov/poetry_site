@@ -653,6 +653,26 @@
   }
   var PLAY_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>';
 
+  /* Умная ссылка на сенсорных устройствах: сначала пробуем установленное
+     приложение через deep link, при неудаче — веб-версию. Страница ушла
+     в фон / окно потеряло фокус — значит, приложение открылось. */
+  function openViaApp(e, deeplink, fallbackUrl, wait) {
+    e.preventDefault();
+    var wentAway = false;
+    document.addEventListener("visibilitychange", function onHide() {
+      if (document.hidden) wentAway = true;
+      document.removeEventListener("visibilitychange", onHide);
+    });
+    var f = document.createElement("iframe");
+    f.style.display = "none";
+    f.src = deeplink;
+    document.body.appendChild(f);
+    setTimeout(function () { f.remove(); }, 2000);
+    setTimeout(function () {
+      if (!wentAway) window.open(fallbackUrl, "_blank");
+    }, wait || 1500);
+  }
+
   function renderVideoList() {
     currentNav = null;
     listNav = null;
@@ -662,7 +682,7 @@
       var p = poemById(v.poem);
       return '<article class="card video-card" data-href="#video/' + esc(v.id) + '">' +
         '<div class="vcover" aria-hidden="true"><span class="vplay">' + PLAY_SVG + '</span></div>' +
-        (p ? '<a class="tag" href="#poem/' + esc(p.id) + '">' + esc(normGenre(p.genre)) + '</a>' : '') +
+        (p ? '<a class="tag" href="' + listHref("", normGenre(p.genre), 1) + '">' + esc(normGenre(p.genre)) + '</a>' : '') +
         '<h3><a href="#video/' + esc(v.id) + '">' + esc(v.title) + '</a></h3>' +
         '<div class="foot"><span>' + esc(showDate(v.date)) + '</span>' +
           '<a href="#video/' + esc(v.id) + '">Смотреть →</a></div>' +
@@ -670,10 +690,8 @@
     }).join("");
     app.innerHTML = '<div class="wrap layout video-page">' + authorAsideHtml() +
       '<main>' +
-        '<h2 class="section">Видео</h2>' +
         (all.length
-          ? '<p class="count">Всего видео: ' + all.length + '</p>' +
-            '<div class="cards">' + cards + '</div>'
+          ? '<div class="cards">' + cards + '</div>'
           : '<div class="empty">Видео скоро появятся.</div>') +
       '</main>' +
     '</div>';
@@ -727,7 +745,7 @@
         '</nav>' +
         '<div class="poem-actions">' +
           '<a class="back-link" href="#video">← ко всем видео</a>' +
-          '<a class="vk-link" href="' + esc(v.vk) + '" target="_blank" rel="noopener" title="Открыть во ВКонтакте">Смотреть во ВКонтакте ↗</a>' +
+          '<a class="vk-link" href="' + esc(v.vk) + '" target="_blank" rel="noopener" title="Открыть на VK Видео">Смотреть на VK Видео ↗</a>' +
         '</div>' +
       '</main>' +
     '</div>' +
@@ -736,6 +754,16 @@
     swipeHintEl = null;
     bindAuthorAside();
     bindVideoUnmute(document.querySelector(".vframe iframe"));
+    /* «Смотреть на VK Видео»: на сенсорных сначала пробуем приложение
+       (vk:// понимает пути vk.com, среди них — video), при неудаче — веб. */
+    var vkLink = document.querySelector(".vk-link");
+    if (vkLink) {
+      vkLink.addEventListener("click", function (e) {
+        var coarse = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+        if (!coarse) return;
+        openViaApp(e, v.vk.replace(/^https:\/\/vkvideo\.ru\//, "vk://vk.com/"), v.vk);
+      });
+    }
   }
 
   /* ── Маршрутизация по хешу ───────────────────────────── */
