@@ -784,6 +784,45 @@
     }
   }
 
+  /* ── Раздел «Аудио» ──────────────────────────────────── */
+  /* VK своего аудиоплеера наружу не отдаёт, поэтому записи играют родным
+     плеером (<audio>) с файлов в assets/audio; ссылка на VK — запасной путь. */
+  function audios() {
+    return (window.AUDIOS || []).slice().sort(byDateDesc);
+  }
+
+  function renderAudioList() {
+    currentNav = null;
+    listNav = null;
+    document.title = "Аудио — Яков Шахов — стихи";
+    var all = audios();
+    var cards = all.map(function (a) {
+      var p = poemById(a.poem);
+      return '<article class="card audio-card">' +
+        (p ? '<a class="tag" href="' + listHref("", normGenre(p.genre), 1) + '">' + esc(normGenre(p.genre)) + '</a>' : '') +
+        '<h3>' + esc(a.title) + '</h3>' +
+        (a.src
+          ? '<div class="aplayer"><audio controls preload="none" src="' + esc(a.src) + '"></audio></div>'
+          : '<p class="aempty">Файл ещё не добавлен — послушать можно во ВКонтакте.</p>') +
+        '<div class="foot"><span>' + esc(showDate(a.date)) + '</span>' +
+          '<a href="' + esc(a.vk) + '" target="_blank" rel="noopener" title="Открыть во ВКонтакте">Слушать на VK ↗</a></div>' +
+      '</article>';
+    }).join("");
+    app.innerHTML = '<div class="wrap layout audio-page">' + authorAsideHtml() +
+      '<main>' +
+        (all.length
+          ? '<div class="cards">' + cards + '</div>'
+          : '<div class="empty">Аудиозаписи скоро появятся.</div>') +
+      '</main>' +
+    '</div>';
+    /* цель «нажали прослушивание» (не «открыли страницу») */
+    app.querySelectorAll(".aplayer audio").forEach(function (el) {
+      el.addEventListener("play", function () { trackGoal("audio_play"); });
+    });
+    bindAuthorAside();
+    stickAside();
+  }
+
   /* ── Маршрутизация по хешу ───────────────────────────── */
   function route() {
     var h = location.hash.replace(/^#\/?/, "");
@@ -806,6 +845,9 @@
       window.scrollTo(0, 0);
     } else if (h === "video") {
       renderVideoList();
+      window.scrollTo(0, 0);
+    } else if (h === "audio") {
+      renderAudioList();
       window.scrollTo(0, 0);
     } else if (h.indexOf("video/") === 0) {
       renderVideo(decodeURIComponent(h.slice(6)));

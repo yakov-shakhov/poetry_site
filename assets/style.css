@@ -447,6 +447,14 @@ article.video-full .meta {
 .vpoem { display: inline-block; margin-top: 18px; font-size: 15px; }
 .vk-link { font-size: 15px; white-space: nowrap; }
 
+/* ── Аудио ─────────────────────────────── */
+.audio-card h3 { margin: 14px 0 12px; }
+.aplayer audio { width: 100%; display: block; }
+/* родной плеер подстраивается под тему сайта в Chromium/Firefox */
+.aplayer audio::-webkit-media-controls-panel { background: var(--card); }
+.audio-card .foot { margin-top: 14px; }
+.aempty { color: var(--muted); font-style: italic; font-size: 15px; margin: 0; }
+
 /* ── Список (админка) ──────────────────── */
 ul.poems { list-style: none; margin: 0; padding: 0; }
 ul.poems li {
