@@ -35,7 +35,12 @@ body {
   background: var(--bg);
   color: var(--ink);
   font: 17px/1.65 Georgia, "Times New Roman", serif;
+  /* подвал прижат к низу экрана, даже когда контента мало (страница видео) */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
+main#app { flex: 1 0 auto; }
 
 a { color: var(--accent); text-decoration: none; }
 a:hover { color: var(--accent-dark); }
