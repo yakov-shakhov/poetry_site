@@ -67,6 +67,25 @@ nav.main { display: flex; gap: 30px; font-size: 16px; }
 nav.main a { color: var(--muted); }
 nav.main a.active, nav.main a:hover { color: var(--accent); }
 
+/* ── Табы разделов: на десктопе скрыты, на мобильных — вторая
+   строка липкой шапки вместо текстовой навигации ── */
+nav.sections { display: none; }
+@media (max-width: 980px) {
+  nav.main { display: none; }
+  nav.sections {
+    display: flex; justify-content: center; gap: 8px;
+    order: 3; width: 100%; margin-top: 10px;
+  }
+  nav.sections a {
+    font: 15px/1 Georgia, serif; padding: 9px 22px; border-radius: 20px;
+    border: 1px solid var(--line); background: var(--card); color: var(--muted);
+  }
+  nav.sections a:hover { border-color: var(--accent); color: var(--accent); }
+  nav.sections a.active {
+    background: var(--accent); border-color: var(--accent); color: var(--card);
+  }
+}
+
 /* ── Переключатель темы ────────────────── */
 .theme-toggle {
   display: inline-flex; align-items: center; justify-content: center;
@@ -383,6 +402,47 @@ h2.section {
   border-bottom: 1px solid var(--line); padding-bottom: 8px;
 }
 
+/* ── Видео ─────────────────────────────── */
+/* обложка-заглушка карточки: iframe VK тяжёлый, поэтому на списке —
+   фасад, плеер подгружается только на странице видео */
+.vcover {
+  aspect-ratio: 16 / 9; border-radius: 8px; overflow: hidden;
+  background: linear-gradient(135deg, var(--chip), var(--line));
+  display: flex; align-items: center; justify-content: center;
+}
+.vplay {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: var(--accent); color: var(--card);
+  display: inline-flex; align-items: center; justify-content: center;
+  line-height: 0; box-shadow: var(--shadow);
+}
+.vplay svg { margin-left: 3px; } /* оптическая центровка треугольника */
+.video-card h3 { margin-top: 14px; }
+.video-page .count { margin: 0 0 18px; }
+.video-page .cards { margin-top: 4px; }
+
+/* страница видео: карточка как у стиха, плеер 16:9 */
+article.video-full {
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 24px; margin: 40px auto 0; max-width: 760px;
+  animation: poem-in .4s ease both;
+}
+@media (prefers-reduced-motion: reduce) {
+  article.video-full { animation: none; }
+}
+.vframe { position: relative; padding-top: 56.25%; border-radius: 8px; overflow: hidden; background: #000; }
+.vframe iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+article.video-full h2 { font-size: 26px; margin: 20px 0 4px; line-height: 1.3; letter-spacing: .02em; text-wrap: pretty; }
+article.video-full .meta {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
+  color: var(--muted); font-size: 15px;
+  letter-spacing: .06em;
+  padding-bottom: 18px; border-bottom: 1px solid var(--line);
+}
+.vpoem { display: inline-block; margin-top: 18px; font-size: 15px; }
+.vk-link { font-size: 15px; white-space: nowrap; }
+
 /* ── Список (админка) ──────────────────── */
 ul.poems { list-style: none; margin: 0; padding: 0; }
 ul.poems li {
@@ -429,11 +489,13 @@ footer.site {
 
 @media (max-width: 640px) {
   .wrap { padding: 0 18px; }
-  /* правый отступ — чтобы «Стихи» не налезали на кнопки в правом углу */
+  /* правый отступ — чтобы логотип не налезал на кнопки в правом углу */
   header.site .wrap { padding-top: 12px; padding-bottom: 12px; padding-right: 108px; justify-content: center; position: relative; }
-  .header-actions { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); }
+  .header-actions { position: absolute; right: 18px; top: 26px; transform: translateY(-50%); }
   .logo { font-size: 22px; }
   nav.main { gap: 18px; font-size: 15px; }
+  nav.sections { margin-top: 8px; gap: 7px; }
+  nav.sections a { padding: 8px 18px; font-size: 14px; }
   aside { max-width: none; }
   /* компактный блок автора: фото слева, роль справа; имя в шапке уже есть,
      поэтому h1 на мобильных скрыт — стихи ближе к началу страницы */
@@ -469,6 +531,9 @@ footer.site {
   .card h3 { font-size: 20px; }
   article.poem { padding: 26px 20px; margin: 24px 0; }
   article.poem h2 { font-size: 26px; }
+  article.video-full { padding: 14px 14px 18px; margin: 20px 0 0; }
+  article.video-full h2 { font-size: 21px; margin-top: 16px; }
+  .vpoem { margin-top: 14px; }
   .poem-nav { font-size: 14px; margin-top: 24px; }
   .copy-full { display: none; }
   .copy-short { display: inline; }

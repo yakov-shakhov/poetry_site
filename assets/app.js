@@ -586,6 +586,105 @@
     maybeShowSwipeHint();
   }
 
+  /* ── Раздел «Видео» ──────────────────────────────────── */
+  /* Записи из VK: в данных только ссылка вида vkvideo.ru/video-ИД_ИД —
+     oid/id для embed вычисляются из неё. Сортировка — как у стихов. */
+  function videos() {
+    return (window.VIDEOS || []).slice().sort(byDateDesc);
+  }
+  function videoEmbedSrc(v) {
+    var m = /video(-?\d+)_(\d+)/.exec(v.vk || v.id || "");
+    return m
+      ? "https://vk.com/video_ext.php?oid=" + m[1] + "&id=" + m[2] + "&hd=2&autoplay=1"
+      : "";
+  }
+  function poemById(id) {
+    if (!id) return null;
+    var list = poems();
+    for (var k = 0; k < list.length; k++) {
+      if (list[k].id === id) return list[k];
+    }
+    return null;
+  }
+  var PLAY_SVG = '<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M8 5.5v13l11-6.5z"/></svg>';
+
+  function renderVideoList() {
+    currentNav = null;
+    listNav = null;
+    document.title = "Видео — Яков Шахов — стихи";
+    var all = videos();
+    var cards = all.map(function (v) {
+      var p = poemById(v.poem);
+      return '<article class="card video-card" data-href="#video/' + esc(v.id) + '">' +
+        '<div class="vcover" aria-hidden="true"><span class="vplay">' + PLAY_SVG + '</span></div>' +
+        (p ? '<a class="tag" href="#poem/' + esc(p.id) + '">' + esc(normGenre(p.genre)) + '</a>' : '') +
+        '<h3><a href="#video/' + esc(v.id) + '">' + esc(v.title) + '</a></h3>' +
+        '<div class="foot"><span>' + esc(showDate(v.date)) + '</span>' +
+          '<a href="#video/' + esc(v.id) + '">Смотреть →</a></div>' +
+      '</article>';
+    }).join("");
+    app.innerHTML = '<div class="wrap page-center video-page">' +
+      '<h2 class="section">Видео</h2>' +
+      (all.length
+        ? '<p class="count">Всего видео: ' + all.length + '</p>' +
+          '<div class="cards">' + cards + '</div>'
+        : '<div class="empty">Видео скоро появятся.</div>') +
+      '</div>';
+  }
+
+  function renderVideo(id) {
+    document.title = "Яков Шахов — стихи";
+    var list = videos();
+    var i = -1;
+    for (var k = 0; k < list.length; k++) {
+      if (list[k].id === id) { i = k; break; }
+    }
+    if (i === -1) {
+      currentNav = null;
+      listNav = null;
+      app.innerHTML = '<div class="wrap page-center">' +
+        '<h2 class="section">Видео не найдено</h2>' +
+        '<p><a class="back-link" href="#video">← ко всем видео</a></p></div>';
+      return;
+    }
+    var v = list[i];
+    var p = poemById(v.poem);
+    var prev = list[i - 1], next = list[i + 1];
+    currentNav = { prev: prev, next: next, base: "#video/" };
+    listNav = null;
+    trackGoal("video_play");
+    var src = videoEmbedSrc(v);
+    document.title = v.title + " — видео — Яков Шахов — стихи";
+    app.innerHTML = '<div class="wrap page-center">' +
+      '<article class="video-full">' +
+        (src
+          ? '<div class="vframe"><iframe src="' + esc(src) + '" allow="autoplay; encrypted-media; fullscreen; picture-in-picture; screen-wake-lock;" allowfullscreen title="' + esc(v.title) + '"></iframe></div>'
+          : '<div class="vcover" aria-hidden="true"><span class="vplay">' + PLAY_SVG + '</span></div>') +
+        '<h2>' + esc(v.title) + '</h2>' +
+        '<div class="meta"><span>' + esc(showDate(v.date)) + '</span>' +
+          '<span class="meta-pos">' + (i + 1) + ' из ' + list.length + '</span></div>' +
+        (p ? '<a class="vpoem" href="#poem/' + esc(p.id) + '">Стихотворение: «' + esc(p.title) + '» →</a>' : '') +
+      '</article>' +
+      '<nav class="poem-nav">' +
+        (prev
+          ? '<a class="pn-full" href="#video/' + esc(prev.id) + '">← ' + esc(prev.title) + '</a>' +
+            '<a class="pn-compact" href="#video/' + esc(prev.id) + '" aria-label="Предыдущее видео">‹</a>'
+          : '<span></span>') +
+        '<span class="poem-pos">' + (i + 1) + ' из ' + list.length + '</span>' +
+        (next
+          ? '<a class="pn-full" href="#video/' + esc(next.id) + '">' + esc(next.title) + ' →</a>' +
+            '<a class="pn-compact" href="#video/' + esc(next.id) + '" aria-label="Следующее видео">›</a>'
+          : '') +
+      '</nav>' +
+      '<div class="poem-actions">' +
+        '<a class="back-link" href="#video">← ко всем видео</a>' +
+        '<a class="vk-link" href="' + esc(v.vk) + '" target="_blank" rel="noopener" title="Открыть во ВКонтакте">Смотреть во ВКонтакте ↗</a>' +
+      '</div>' +
+      (prev ? '<button type="button" class="edge-nav edge-prev" aria-label="Предыдущее видео">‹</button>' : '') +
+      (next ? '<button type="button" class="edge-nav edge-next" aria-label="Следующее видео">›</button>' : '');
+    swipeHintEl = null;
+  }
+
   /* ── Маршрутизация по хешу ───────────────────────────── */
   function route() {
     var h = location.hash.replace(/^#\/?/, "");
@@ -596,15 +695,21 @@
     var outgoingListKey = outgoingIsList ? listNav.q + "|" + listNav.genre + "|" + listNav.page : null;
     var outgoingScrollY = window.scrollY;
     var section = decodeURIComponent(h.split(/[/?]/)[0] || "") || "home";
-    /* Ушли со страницы стиха, не свайпнув, — подсказку больше не показываем */
-    if (h.indexOf("poem/") !== 0) dismissSwipeHint();
-    var nav = document.querySelectorAll("nav.main a");
+    /* Ушли со страницы стиха/видео, не свайпнув, — подсказку больше не показываем */
+    if (h.indexOf("poem/") !== 0 && h.indexOf("video/") !== 0) dismissSwipeHint();
+    var nav = document.querySelectorAll("nav.main a, nav.sections a");
     nav.forEach(function (a) {
       a.classList.toggle("active", section === a.getAttribute("href").slice(1));
     });
 
     if (h.indexOf("poem/") === 0) {
       renderPoem(h.slice(5));
+      window.scrollTo(0, 0);
+    } else if (h === "video") {
+      renderVideoList();
+      window.scrollTo(0, 0);
+    } else if (h.indexOf("video/") === 0) {
+      renderVideo(decodeURIComponent(h.slice(6)));
       window.scrollTo(0, 0);
     } else {
       /* «#home» — явный путь «на главную» (логотип): без фильтров
@@ -674,8 +779,9 @@
 
   /* ── Листание: стрелки на десктопе, свайпы на мобильных.
      На странице стиха — соседние стихи, на главной — страницы списка. ── */
+  /* base в currentNav отличает листание видео от стихов (стрелки, свайпы) */
   function gotoPoem(p) {
-    if (p) location.hash = "#poem/" + p.id;
+    if (p) location.hash = (currentNav && currentNav.base ? currentNav.base : "#poem/") + p.id;
   }
   function gotoPage(n) {
     if (n < 1 || n > listNav.pages || n === listNav.page) return;
