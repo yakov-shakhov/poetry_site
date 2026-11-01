@@ -236,6 +236,22 @@
       '</aside>';
   }
 
+  /* Если колонка контента ниже портретной (короткие страницы разделов),
+     даём sticky-портрету «дорожку» для закрепления — как на странице
+     стихов: без неё фото уезжает под шапку при первом же прокруте. */
+  function stickAside() {
+    /* на мобильных aside не sticky (одноколоночная вёрстка) — не вмешиваемся */
+    if (!(window.matchMedia && window.matchMedia("(min-width: 981px)").matches)) return;
+    var as = document.querySelector(".layout > aside");
+    var mn = document.querySelector(".layout > main");
+    if (!as || !mn || mn.offsetHeight >= as.offsetHeight) return;
+    var footer = document.querySelector("footer.site");
+    /* 80 — нижний отступ .layout, +20 — запас: столько прокрутки остаётся
+       после того, как весь контент уже просмотрен */
+    mn.style.minHeight = as.offsetHeight + 80 +
+      (footer ? footer.offsetHeight : 0) + 20 + "px";
+  }
+
   /* Обработчики кнопок портретной колонки (вызывается после каждого рендера). */
   function bindAuthorAside() {
     var a = window.AUTHOR;
@@ -696,6 +712,7 @@
       '</main>' +
     '</div>';
     bindAuthorAside();
+    stickAside();
   }
 
   function renderVideo(id) {
@@ -753,6 +770,7 @@
     (next ? '<button type="button" class="edge-nav edge-next" aria-label="Следующее видео">›</button>' : '');
     swipeHintEl = null;
     bindAuthorAside();
+    stickAside();
     bindVideoUnmute(document.querySelector(".vframe iframe"));
     /* «Смотреть на VK Видео»: на сенсорных сначала пробуем приложение
        (vk:// понимает пути vk.com, среди них — video), при неудаче — веб. */
