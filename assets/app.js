@@ -515,7 +515,9 @@
       '<article class="poem">' +
         '<a class="tag" href="' + listHref("", normGenre(p.genre), 1) + '">' + esc(normGenre(p.genre)) + '</a>' +
         '<h2>' + esc(p.title) + '</h2>' +
-        '<div class="meta">' + esc(showDate(p.date)) + '</div>' +
+        /* дата слева, счётчик «x из N» справа (дублирует счётчик внизу) */
+        '<div class="meta"><span>' + esc(showDate(p.date)) + '</span>' +
+          '<span class="meta-pos">' + (i + 1) + ' из ' + list.length + '</span></div>' +
         '<pre class="text">' + esc(p.text) + '</pre>' +
         '<div class="poem-sign">' + esc(a.name) + '</div>' +
         '<div class="source-link">' +
@@ -541,15 +543,16 @@
             '<a class="pn-compact" href="#poem/' + esc(next.id) + '" aria-label="Следующее стихотворение">›</a>'
           : '') +
       '</nav>' +
-      '<p class="poem-random">' +
+      /* «ко всем стихам» слева + «Случайный стих» справа — одна строка */
+      '<div class="poem-actions">' +
+        '<a class="back-link" href="' +
+          (lastList ? listHref(lastList.q, lastList.genre, lastList.page) : "#poems") +
+        '">← ко всем стихам</a>' +
         '<button type="button" class="random-link" id="randomLink" title="Случайный стих (клавиша R)">' +
           '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.2" cy="8.2" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.8" cy="8.2" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="8.2" cy="15.8" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.8" cy="15.8" r="1.3" fill="currentColor" stroke="none"/></svg>' +
           'Случайный стих' +
         '</button>' +
-      '</p>' +
-      '<p><a class="back-link" href="' +
-        (lastList ? listHref(lastList.q, lastList.genre, lastList.page) : "#poems") +
-      '">← ко всем стихам</a></p>' +
+      '</div>' +
       /* Краевые стрелки листания: видны только на сенсорных экранах (CSS).
          Подсказывают про свайпы и сами служат тап-целями по краям. */
       (prev ? '<button type="button" class="edge-nav edge-prev" aria-label="Предыдущее стихотворение">‹</button>' : '') +

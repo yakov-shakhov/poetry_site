@@ -243,8 +243,10 @@ article.poem {
 }
 article.poem .tag { font-size: 13px; }
 article.poem h2 { font-size: 32px; margin: 18px 0 4px; letter-spacing: .02em; line-height: 1.3; text-wrap: pretty; }
-/* дата: разрядка + тонкий отделитель между датой и текстом */
+/* дата: разрядка + тонкий отделитель между датой и текстом;
+   дата прижата влево, счётчик «x из N» — вправо */
 article.poem .meta {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 12px;
   color: var(--muted); font-size: 15px;
   letter-spacing: .06em;
   padding-bottom: 22px; border-bottom: 1px solid var(--line);
@@ -277,6 +279,12 @@ article.poem pre.text {
   margin: 36px auto 0; max-width: 760px; flex-wrap: wrap;
 }
 .poem-nav a { font-size: 15px; }
+/* названия соседних стихов ужимаются с многоточием — строка
+   «‹ предыдущий | x из N | следующий ›» всегда остаётся одной линией */
+.pn-full {
+  flex: 0 1 auto; min-width: 0; max-width: 38%;
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
 .poem-pos { color: var(--muted); font-size: 14px; align-self: center; white-space: nowrap; }
 /* на мобильных вместо названий соседних стихов — компактные кнопки ‹ ›
    (десктопный вариант .pn-full, мобильный .pn-compact) */
@@ -292,8 +300,11 @@ article.poem pre.text {
   }
   .pn-compact:active { border-color: var(--accent); }
 }
-/* «Случайный стих» на странице стиха — под навигацией */
-.poem-random { text-align: center; margin: 16px auto 0; max-width: 760px; }
+/* «Случайный стих» + «ко всем стихам» — одна строка под навигацией */
+.poem-actions {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 12px; margin: 16px auto 0; max-width: 760px;
+}
 .random-link {
   display: inline-flex; align-items: center; gap: 7px;
   background: none; border: none; padding: 4px 8px; cursor: pointer;
@@ -362,6 +373,8 @@ article.poem pre.text {
 
 .back-link { display: inline-block; margin: 26px auto 60px; max-width: 760px; font-size: 15px; }
 .page-center .back-link { display: block; text-align: center; }
+/* в строке действий страницы стиха ссылка прижата влево, без центровки */
+.poem-actions .back-link { display: inline-block; margin: 0; text-align: left; }
 .page-center { max-width: 760px; margin: 0 auto; }
 
 /* ── Разделы ───────────────────────────── */
@@ -404,6 +417,8 @@ footer.site {
   background: var(--card); border-top: 1px solid var(--line);
   color: var(--muted); font-size: 14px; padding: 28px 0 42px;
 }
+/* на мобильных — сокращённая формулировка копирайта в одну строку */
+.copy-short { display: none; }
 
 /* ── Мобильные устройства ──────────────── */
 @media (max-width: 980px) {
@@ -455,4 +470,6 @@ footer.site {
   article.poem { padding: 26px 20px; margin: 24px 0; }
   article.poem h2 { font-size: 26px; }
   .poem-nav { font-size: 14px; margin-top: 24px; }
+  .copy-full { display: none; }
+  .copy-short { display: inline; }
 }
