@@ -799,7 +799,12 @@
     var cards = all.map(function (a) {
       var p = poemById(a.poem);
       return '<article class="card audio-card">' +
-        (p ? '<a class="tag" href="' + listHref("", normGenre(p.genre), 1) + '">' + esc(normGenre(p.genre)) + '</a>' : '') +
+        (p
+          ? '<div class="card-top">' +
+              '<a class="tag" href="' + listHref("", normGenre(p.genre), 1) + '">' + esc(normGenre(p.genre)) + '</a>' +
+              '<a class="totext" href="#poem/' + esc(p.id) + '" title="Перейти к тексту стихотворения">К тексту</a>' +
+            '</div>'
+          : '') +
         '<h3>' + esc(a.title) + '</h3>' +
         (a.desc ? '<p class="adesc">' + esc(a.desc) + '</p>' : '') +
         (a.src

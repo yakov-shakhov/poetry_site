@@ -449,6 +449,12 @@ article.video-full .meta {
 
 /* ── Аудио ─────────────────────────────── */
 .audio-card h3 { margin: 14px 0 12px; }
+/* строка над заголовком: чипс жанра слева, «К тексту» справа */
+.audio-card .card-top {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+}
+.audio-card .card-top .tag { align-self: auto; }
+.totext { font-size: 14px; font-weight: bold; white-space: nowrap; }
 .adesc { margin: 0 0 12px; }
 .aplayer audio { width: 100%; display: block; }
 /* родной плеер подстраивается под тему сайта в Chromium/Firefox */

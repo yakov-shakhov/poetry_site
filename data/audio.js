@@ -10,7 +10,7 @@ window.AUDIOS = [
   {
     id: "u-izborskoy-kreposti",
     title: "«У Изборской крепости…» — читает автор",
-    date: "",
+    date: "22.06.2015",
     desc: "",
     vk: "",
     src: "https://yakovshakhov.com/assets/audio/u-izborskoy-kreposti.mp3",
@@ -19,7 +19,7 @@ window.AUDIOS = [
   {
     id: "peterburgskaya-latina",
     title: "«Петербургская латина» — читает автор",
-    date: "",
+    date: "21.04.2015",
     desc: "",
     vk: "",
     src: "https://yakovshakhov.com/assets/audio/peterburgskaya-latina.mp3",
@@ -28,7 +28,7 @@ window.AUDIOS = [
   {
     id: "ldinki",
     title: "«Льдинки» — читает автор",
-    date: "",
+    date: "18.03.2015",
     desc: "",
     vk: "",
     src: "https://yakovshakhov.com/assets/audio/ldinki.mp3",
@@ -37,7 +37,7 @@ window.AUDIOS = [
   {
     id: "elchik",
     title: "«Ельчик» — читает автор",
-    date: "",
+    date: "06.11.2014",
     desc: "",
     vk: "",
     src: "https://yakovshakhov.com/assets/audio/elchik.mp3",
@@ -46,7 +46,7 @@ window.AUDIOS = [
   {
     id: "russkiy-tsar",
     title: "«Русский царь» — читает автор",
-    date: "",
+    date: "04.03.2014",
     desc: "",
     vk: "",
     src: "https://yakovshakhov.com/assets/audio/russkiy-tsar.mp3",
@@ -55,7 +55,7 @@ window.AUDIOS = [
   {
     id: "ot-primy-do-ryby",
     title: "«От Примы до Рыбы…» — читает автор",
-    date: "",
+    date: "18.02.2014",
     desc: "",
     vk: "",
     src: "https://yakovshakhov.com/assets/audio/ot-primy-do-ryby.mp3",
@@ -64,7 +64,7 @@ window.AUDIOS = [
   {
     id: "kazachya-zarisovka",
     title: "«Казачья зарисовка» — читает автор",
-    date: "",
+    date: "12.03.2011",
     desc: "",
     vk: "",
     src: "https://yakovshakhov.com/assets/audio/kazachya-zarisovka.mp3",
@@ -73,7 +73,7 @@ window.AUDIOS = [
   {
     id: "muha",
     title: "«Муха» — читает автор",
-    date: "",
+    date: "20.11.2010",
     desc: "",
     vk: "",
     src: "https://yakovshakhov.com/assets/audio/muha.mp3",
