@@ -598,3 +598,35 @@ footer.site {
   .copy-full { display: none; }
   .copy-short { display: inline; }
 }
+
+/* ── Печать (Ctrl+P / «Сохранить как PDF») ─────────────── */
+/* На бумагу — только стих: название, дата, текст, подпись.
+   Шапка, колонка автора, навигация и кнопки прячутся; тёмная тема
+   принудительно заменяется «книжной» светлой. */
+@media print {
+  header.site, footer.site, aside,
+  .poem-nav, .poem-actions, .edge-nav, .swipe-hint,
+  .source-link, .pmedia-row,
+  .search, .chips, .chips-toggle, .count, .pager, .pager-hint,
+  .toast, .skip-link { display: none !important; }
+  body {
+    display: block; min-height: 0;
+    background: #fff; color: #000;
+    font: 12pt/1.6 Georgia, "Times New Roman", serif;
+  }
+  .wrap { max-width: none; padding: 0; }
+  article.poem {
+    border: none; box-shadow: none;
+    padding: 0; margin: 0; max-width: none; animation: none;
+  }
+  article.poem .tag { display: none; }
+  article.poem h2 { font-size: 20pt; margin: 0 0 6pt; }
+  article.poem .meta {
+    color: #444; letter-spacing: .04em;
+    padding-bottom: 8pt; border-bottom: 1px solid #999; margin-bottom: 16pt;
+  }
+  article.poem .meta-pos { display: none; } /* счётчик «x из N» на бумагу не нужен */
+  article.poem pre.text { font-size: 13pt; line-height: 1.7; orphans: 3; widows: 3; }
+  .poem-sign { color: #444; }
+  a { color: inherit; }
+}
