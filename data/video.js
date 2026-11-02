@@ -10,7 +10,7 @@ window.VIDEOS = [
     title: "«Ивану Бунину» — читает автор",
     date: "",
     vk: "https://vkvideo.ru/video-74441888_456250577",
-    cover: "",
+    cover: "assets/video-covers/ivanu-buninu.jpg",
     poem: "2015_11_14_5821"
   }
 ];
