@@ -801,11 +801,14 @@
       return '<article class="card audio-card">' +
         (p ? '<a class="tag" href="' + listHref("", normGenre(p.genre), 1) + '">' + esc(normGenre(p.genre)) + '</a>' : '') +
         '<h3>' + esc(a.title) + '</h3>' +
+        (a.desc ? '<p class="adesc">' + esc(a.desc) + '</p>' : '') +
         (a.src
           ? '<div class="aplayer"><audio controls preload="none" src="' + esc(a.src) + '"></audio></div>'
-          : '<p class="aempty">Файл ещё не добавлен — послушать можно во ВКонтакте.</p>') +
+          : (a.vk
+              ? '<p class="aempty">Файл ещё не добавлен — послушать можно во ВКонтакте.</p>'
+              : '<p class="aempty">Файл ещё не добавлен.</p>')) +
         '<div class="foot"><span>' + esc(showDate(a.date)) + '</span>' +
-          '<a href="' + esc(a.vk) + '" target="_blank" rel="noopener" title="Открыть во ВКонтакте">Слушать на VK ↗</a></div>' +
+          (a.vk ? '<a href="' + esc(a.vk) + '" target="_blank" rel="noopener" title="Открыть во ВКонтакте">Слушать на VK ↗</a>' : '') + '</div>' +
       '</article>';
     }).join("");
     app.innerHTML = '<div class="wrap layout audio-page">' + authorAsideHtml() +

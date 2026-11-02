@@ -449,6 +449,7 @@ article.video-full .meta {
 
 /* ── Аудио ─────────────────────────────── */
 .audio-card h3 { margin: 14px 0 12px; }
+.adesc { margin: 0 0 12px; }
 .aplayer audio { width: 100%; display: block; }
 /* родной плеер подстраивается под тему сайта в Chromium/Firefox */
 .aplayer audio::-webkit-media-controls-panel { background: var(--card); }
