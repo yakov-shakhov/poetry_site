@@ -9,6 +9,25 @@
      либо страница списка на главной. */
   var currentNav = null;
   var listNav = null;
+  /* Цикл разделов для свайпов/стрелок на списках: Стихи → Аудио → Видео →
+     по кругу. sectionNav выставляется на страницах-списках (см. render*). */
+  var sectionNav = null;
+  var SECTION_CYCLE = {
+    "#poems": { prev: "#video", next: "#audio" },
+    "#audio": { prev: "#poems", next: "#video" },
+    "#video": { prev: "#audio", next: "#poems" }
+  };
+  /* Краевые шевроны-«соседи» — как на странице стиха, но листают разделы */
+  function sectionEdgeNavHtml() {
+    return '<button type="button" class="edge-nav edge-prev" aria-label="Предыдущий раздел">‹</button>' +
+      '<button type="button" class="edge-nav edge-next" aria-label="Следующий раздел">›</button>';
+  }
+  function bindSectionNav() {
+    var ep = document.querySelector(".edge-nav.edge-prev");
+    var en = document.querySelector(".edge-nav.edge-next");
+    if (ep) ep.addEventListener("click", function () { if (sectionNav) location.hash = sectionNav.prev; });
+    if (en) en.addEventListener("click", function () { if (sectionNav) location.hash = sectionNav.next; });
+  }
   /* Последнее состояние списка — для ссылки «ко всем стихам»
      и восстановления прокрутки после возврата со страницы стиха. */
   var lastList = null;
@@ -349,7 +368,8 @@
         '<div id="results">' + resultsInner(q, genre, page, all) + '</div>' +
       '</main>';
 
-    app.innerHTML = '<div class="wrap layout">' + html + '</div>';
+    sectionNav = SECTION_CYCLE["#poems"];
+    app.innerHTML = '<div class="wrap layout">' + html + '</div>' + sectionEdgeNavHtml();
 
     /* Живой поиск: перерисовывается только блок результатов (фокус в поле
        сохраняется), URL обновляется через replaceState — без записей в истории. */
@@ -396,7 +416,10 @@
       }
     }
     bindChipsToggle();
+    bindSectionNav();
     bindAuthorAside();
+    /* подсказка «листайте свайпом» — один раз, на первом заходе на сайт */
+    maybeShowSwipeHint();
   }
 
   /* Случайный стих: прямой переход по хешу — ссылку можно расшарить,
@@ -499,8 +522,9 @@
     }).join("") + '</div>';
   }
 
-  /* Компактная пагинация: ← 1 2 3 … N →; листать также можно стрелками
-     клавиатуры и свайпами (подсказка под номерами). */
+  /* Компактная пагинация: ← 1 2 3 … N →. Свайпы и стрелки клавиатуры
+     на списках занятны переключением разделов — потому подсказка только
+     про «случайный стих» (десктоп). */
   function pagerHtml(total, page, pages, q, genre) {
     if (pages <= 1) return "";
     var nums = [];
@@ -523,10 +547,7 @@
       ? '<a href="' + listHref(q, genre, page + 1) + '" title="Следующая страница" aria-label="Следующая страница">→</a>'
       : '<span aria-hidden="true">→</span>');
     return '<nav class="pager" aria-label="Страницы списка">' + links.join("") + '</nav>' +
-      '<p class="pager-hint">' +
-        '<span class="hint-desktop">Листать также можно стрелками ← → на клавиатуре, R — случайный стих</span>' +
-        '<span class="hint-mobile">Листать также можно свайпами ← →</span>' +
-      '</p>';
+      '<p class="pager-hint"><span class="hint-desktop">R — случайный стих</span></p>';
   }
 
   /* ── Страница стихотворения ──────────────────────────── */
@@ -538,6 +559,8 @@
       if (list[k].id === id) { i = k; break; }
     }
     if (i === -1) {
+      currentNav = null;
+      sectionNav = null;
       app.innerHTML = '<div class="wrap page-center">' +
         '<h2 class="section">Произведение не найдено</h2>' +
         '<p><a class="back-link" href="#poems">← ко всем стихам</a></p></div>';
@@ -561,6 +584,7 @@
     var prev = list[i - 1], next = list[i + 1];
     currentNav = { prev: prev, next: next };
     listNav = null;
+    sectionNav = null;
     app.innerHTML = '<div class="wrap page-center">' +
       '<article class="poem">' +
         '<a class="tag" href="' + listHref("", normGenre(p.genre), 1) + '">' + esc(normGenre(p.genre)) + '</a>' +
@@ -634,7 +658,6 @@
     if (edgePrev) edgePrev.addEventListener("click", function () { gotoPoem(prev); });
     var edgeNext = document.querySelector(".edge-nav.edge-next");
     if (edgeNext) edgeNext.addEventListener("click", function () { gotoPoem(next); });
-    maybeShowSwipeHint();
   }
 
   /* ── Раздел «Видео» ──────────────────────────────────── */
@@ -731,13 +754,15 @@
           '<a href="#video/' + esc(v.id) + '">Смотреть →</a></div>' +
       '</article>';
     }).join("");
+    sectionNav = SECTION_CYCLE["#video"];
     app.innerHTML = '<div class="wrap layout video-page">' + authorAsideHtml() +
       '<main>' +
         (all.length
           ? '<div class="cards">' + cards + '</div>'
           : '<div class="empty">Видео скоро появятся.</div>') +
       '</main>' +
-    '</div>';
+    '</div>' + sectionEdgeNavHtml();
+    bindSectionNav();
     bindAuthorAside();
     stickAside();
   }
@@ -752,6 +777,7 @@
     if (i === -1) {
       currentNav = null;
       listNav = null;
+      sectionNav = null;
       app.innerHTML = '<div class="wrap page-center">' +
         '<h2 class="section">Видео не найдено</h2>' +
         '<p><a class="back-link" href="#video">← ко всем видео</a></p></div>';
@@ -762,6 +788,7 @@
     var prev = list[i - 1], next = list[i + 1];
     currentNav = { prev: prev, next: next, base: "#video/" };
     listNav = null;
+    sectionNav = null;
     trackGoal("video_play");
     var src = videoEmbedSrc(v);
     document.title = v.title + " — видео — Яков Шахов — стихи";
@@ -861,13 +888,15 @@
           (a.vk ? '<a href="' + esc(a.vk) + '" target="_blank" rel="noopener" title="Открыть во ВКонтакте">Слушать на VK ↗</a>' : '') + '</div>' +
       '</article>';
     }).join("");
+    sectionNav = SECTION_CYCLE["#audio"];
     app.innerHTML = '<div class="wrap layout audio-page">' + authorAsideHtml() +
       '<main>' +
         (all.length
           ? '<div class="cards">' + cards + '</div>'
           : '<div class="empty">Аудиозаписи скоро появятся.</div>') +
       '</main>' +
-    '</div>';
+    '</div>' + sectionEdgeNavHtml();
+    bindSectionNav();
     bindAudioPlayers();
     bindAuthorAside();
     stickAside();
@@ -1026,14 +1055,11 @@
   }
 
   /* ── Листание: стрелки на десктопе, свайпы на мобильных.
-     На странице стиха — соседние стихи, на главной — страницы списка. ── */
+     На страницах стихов и видео — соседние записи, на списках-разделах —
+     цикл разделов: Стихи → Аудио → Видео → по кругу. ── */
   /* base в currentNav отличает листание видео от стихов (стрелки, свайпы) */
   function gotoPoem(p) {
     if (p) location.hash = (currentNav && currentNav.base ? currentNav.base : "#poem/") + p.id;
-  }
-  function gotoPage(n) {
-    if (n < 1 || n > listNav.pages || n === listNav.page) return;
-    location.hash = listHref(listNav.q, listNav.genre, n);
   }
   function typingTarget(el) {
     var tag = (el && el.tagName || "").toLowerCase();
@@ -1047,11 +1073,11 @@
   }
   function navLeft() {
     if (currentNav) gotoPoem(currentNav.prev);
-    else if (listNav) gotoPage(listNav.page - 1);
+    else if (sectionNav) location.hash = sectionNav.prev;
   }
   function navRight() {
     if (currentNav) gotoPoem(currentNav.next);
-    else if (listNav) gotoPage(listNav.page + 1);
+    else if (sectionNav) location.hash = sectionNav.next;
   }
   document.addEventListener("keydown", function (e) {
     if (e.altKey || e.ctrlKey || e.metaKey || typingTarget(e.target) ||
@@ -1075,9 +1101,10 @@
     if (!card || e.target.closest("a, button")) return;
     location.hash = card.getAttribute("data-href");
   });
-  /* ── Одноразовая подсказка «листайте свайпом» на странице стиха ──
-     Только сенсорные экраны; исчезает после первого свайпа, тапа по ней
-     или через 4 секунды; показывается один раз (localStorage). */
+  /* ── Одноразовая подсказка «листайте свайпом» на главной ──
+     Только сенсорные экраны; исчезает после первого свайпа или через
+     4 секунды; показывается один раз (localStorage), со страницы стиха
+     убрана — первый заход на сайт почти всегда начинается с главной. */
   var swipeHintEl = null;
   function dismissSwipeHint() {
     if (!swipeHintEl) return;
@@ -1088,8 +1115,8 @@
   function maybeShowSwipeHint() {
     var seen = false;
     try { seen = localStorage.getItem("swipeHintSeen") === "1"; } catch (e) {}
-    if (seen || !currentNav || !(currentNav.prev || currentNav.next) ||
-        !(window.matchMedia && window.matchMedia("(pointer: coarse)").matches)) return;
+    /* только сенсорные экраны; один раз — до первого свайпа или ухода с главной */
+    if (seen || !(window.matchMedia && window.matchMedia("(pointer: coarse)").matches)) return;
     var el = document.createElement("div");
     el.className = "swipe-hint";
     el.innerHTML = '<span class="swipe-demo" aria-hidden="true"><span class="swipe-dot"></span></span>листайте свайпом';
@@ -1119,7 +1146,7 @@
                Math.abs(e.touches[0].clientX - touchX));
   }, { passive: true });
   document.addEventListener("touchend", function (e) {
-    if ((!currentNav && !listNav) || !touchX) return;
+    if ((!currentNav && !sectionNav) || !touchX) return;
     var dx = e.changedTouches[0].clientX - touchX;
     var dy = e.changedTouches[0].clientY - touchY;
     touchX = 0;
