@@ -1,4 +1,6 @@
 :root {
+  color-scheme: light;
+  accent-color: var(--accent);
   --bg: #f4eee2;
   --card: #fffdf8;
   --ink: #2b2620;
@@ -12,6 +14,7 @@
 
 /* ── Тёмная тема ───────────────────────── */
 html[data-theme="dark"] {
+  color-scheme: dark; /* нативные контролы и скроллбары тоже темнеют */
   --bg: #221c16;
   --card: #2c241c;
   --ink: #ece3d3;
@@ -189,9 +192,12 @@ aside .bio { margin: 16px 0 0; font-size: 16px; }
 }
 .chips a:hover { border-color: var(--accent); color: var(--accent); }
 .chips a.active { background: var(--accent); border-color: var(--accent); color: var(--card); }
-/* на мобильных показываем первые рубрики, остальные — по кнопке «ещё …» */
+/* чипсы свернуты и на десктопе: лишние ряды до первой карточки —
+   по кнопке «Ещё N жанров» (класс expanded на контейнере) */
+.chips a.extra-d { display: none; }
+.chips.expanded a.extra-d { display: inline-block; }
 .chips-toggle {
-  display: none; font: 15px/1 Georgia, serif; padding: 10px 18px; border-radius: 20px;
+  display: inline-block; font: 15px/1 Georgia, serif; padding: 10px 18px; border-radius: 20px;
   background: transparent; border: 1px dashed var(--line); color: var(--muted); cursor: pointer;
 }
 .chips-toggle:hover { border-color: var(--accent); color: var(--accent); }
@@ -448,19 +454,47 @@ article.video-full .meta {
 .vk-link { font-size: 15px; white-space: nowrap; }
 
 /* ── Аудио ─────────────────────────────── */
-.audio-card h3 { margin: 14px 0 12px; }
+.audio-card h3 { margin: 14px 0 4px; }
 /* строка над заголовком: чипс жанра слева, «К тексту» справа */
 .audio-card .card-top {
   display: flex; justify-content: space-between; align-items: center; gap: 12px;
 }
 .audio-card .card-top .tag { align-self: auto; }
 .totext { font-size: 14px; font-weight: bold; white-space: nowrap; }
+/* подзаголовок «читает автор» — из поля reader, чтобы не удлинять заголовок */
+.areader { color: var(--muted); font-size: 14px; margin: 0 0 12px; }
 .adesc { margin: 0 0 12px; }
-.aplayer audio { width: 100%; display: block; }
-/* родной плеер подстраивается под тему сайта в Chromium/Firefox */
-.aplayer audio::-webkit-media-controls-panel { background: var(--card); }
+
+/* кастомный плеер: круглая кнопка, тонкая полоса прогресса, время;
+   настоящий <audio> спрятан — он только источник звука */
+.aplayer { display: flex; align-items: center; gap: 12px; }
+.aplayer audio { display: none; }
+.aplay {
+  width: 44px; height: 44px; border-radius: 50%; flex: none;
+  border: none; cursor: pointer; padding: 0; line-height: 0;
+  background: var(--accent); color: var(--card);
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.aplay:hover { background: var(--accent-dark); }
+.aplay svg { display: block; }
+.aplay .i-pause { display: none; }
+.aplayer.playing .i-pause { display: block; }
+.aplayer.playing .i-play { display: none; }
+/* высота 28px — вся строка служит крупной тап-целью перемотки */
+.abar { flex: 1; height: 28px; display: flex; align-items: center; cursor: pointer; }
+.atrack { position: relative; width: 100%; height: 4px; border-radius: 2px; background: var(--chip); }
+.aprog { position: absolute; left: 0; top: 0; bottom: 0; width: 0%; border-radius: 2px; background: var(--accent); }
+.atime {
+  flex: none; font-size: 13px; color: var(--muted);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
 .audio-card .foot { margin-top: 14px; }
 .aempty { color: var(--muted); font-style: italic; font-size: 15px; margin: 0; }
+
+/* записи чтения на странице стихотворения («Послушать», «Смотреть видео») */
+.pmedia-row { margin-top: 16px; }
+.pmedia { display: inline-block; margin-right: 28px; font-size: 15px; }
 
 /* ── Список (админка) ──────────────────── */
 ul.poems { list-style: none; margin: 0; padding: 0; }
