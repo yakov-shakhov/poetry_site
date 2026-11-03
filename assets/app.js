@@ -575,7 +575,7 @@
     var poemVideo = (window.VIDEOS || []).filter(function (x) { return x.poem === p.id; });
     var mediaRow = (poemAudio.length || poemVideo.length
       ? '<div class="pmedia-row">' +
-          (poemAudio.length ? '<a class="pmedia" href="#audio" title="Аудиозапись чтения">Послушать →</a>' : '') +
+          (poemAudio.length ? '<a class="pmedia" href="#audio?play=' + encodeURIComponent(p.id) + '" title="Аудиозапись чтения">Аудио стиха →</a>' : '') +
           (poemVideo.length ? '<a class="pmedia" href="#video/' + esc(poemVideo[0].id) + '" title="Видеозапись чтения">Смотреть видео →</a>' : '') +
         '</div>'
       : '');
@@ -875,7 +875,7 @@
         (a.reader ? '<p class="areader">' + esc(a.reader) + '</p>' : '') +
         (a.desc ? '<p class="adesc">' + esc(a.desc) + '</p>' : '') +
         (a.src
-          ? '<div class="aplayer" data-title="' + esc(a.title) + '">' +
+          ? '<div class="aplayer" data-poem="' + esc(a.poem || "") + '" data-title="' + esc(a.title) + '">' +
               '<button type="button" class="aplay" aria-label="Слушать: ' + esc(a.title) + '">' +
                 APLAY_SVG + APAUSE_SVG +
               '</button>' +
@@ -901,6 +901,20 @@
     '</div>' + sectionEdgeNavHtml();
     bindSectionNav();
     bindAudioPlayers();
+    /* «Аудио стиха» (со страницы стиха, #audio?play=<id>):
+       запись этого стиха прокручивается в поле зрения и начинает играть. */
+    var m = location.hash.match(/[?&]play=([^&]+)/);
+    if (m) {
+      var playPoem = decodeURIComponent(m[1]);
+      var target = null;
+      app.querySelectorAll(".aplayer").forEach(function (pl) {
+        if (pl.getAttribute("data-poem") === playPoem && !target) target = pl;
+      });
+      if (target) {
+        if (target.scrollIntoView) target.scrollIntoView({ block: "center" });
+        target.querySelector(".aplay").click();
+      }
+    }
     bindAuthorAside();
     stickAside();
   }
@@ -985,7 +999,7 @@
     } else if (h === "video") {
       renderVideoList();
       window.scrollTo(0, 0);
-    } else if (h === "audio") {
+    } else if (h === "audio" || h.indexOf("audio?") === 0) {
       renderAudioList();
       window.scrollTo(0, 0);
     } else if (h.indexOf("video/") === 0) {
