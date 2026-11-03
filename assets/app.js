@@ -361,6 +361,7 @@
 
     var html = authorAsideHtml() +
       '<main>' +
+        '<h2 class="section page-title">Стихотворения</h2>' +
         '<form id="searchForm">' +
           (genre ? '<input type="hidden" name="genre" value="' + esc(genre) + '">' : '') +
           '<input class="search" type="search" name="q" aria-label="Поиск по стихотворениям" placeholder="Поиск по ' + all.length + ' стихотворениям…" value="' + esc(q) + '">' +
@@ -757,6 +758,7 @@
     sectionNav = SECTION_CYCLE["#video"];
     app.innerHTML = '<div class="wrap layout video-page">' + authorAsideHtml() +
       '<main>' +
+        '<h2 class="section page-title">Видеозаписи</h2>' +
         (all.length
           ? '<div class="cards">' + cards + '</div>'
           : '<div class="empty">Видео скоро появятся.</div>') +
@@ -891,6 +893,7 @@
     sectionNav = SECTION_CYCLE["#audio"];
     app.innerHTML = '<div class="wrap layout audio-page">' + authorAsideHtml() +
       '<main>' +
+        '<h2 class="section page-title">Аудиозаписи</h2>' +
         (all.length
           ? '<div class="cards">' + cards + '</div>'
           : '<div class="empty">Аудиозаписи скоро появятся.</div>') +
