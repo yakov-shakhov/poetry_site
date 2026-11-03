@@ -1,0 +1,4 @@
+#!/bin/sh
+# Проверка data-файлов (poems/audio/video/author) перед пушем —
+# ловит синтаксические ошибки ручной правки (см. scripts/check_data.js)
+node scripts/check_data.js || exit 1
