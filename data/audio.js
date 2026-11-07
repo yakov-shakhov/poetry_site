@@ -1,7 +1,7 @@
 /* Аудиозаписи чтений. VK не даёт встроить свой аудиоплеер на сторонние
    сайты, поэтому mp3 лежат в репозитории прода (assets/audio) и играют
    родным плеером сайта — и песочница, и прод ссылаются на них по
-   абсолютному адресу yakovshakhov.com.
+   абсолютному адресу yakovshakhov.ru.
    Поля: reader — кто читает (строка-подзаголовок в карточке); date и
    desc (описание) заполняются вручную; vk — ссылка на запись во
    ВКонтакте (если пусто, ссылка в карточке не показывается);
@@ -15,7 +15,7 @@ window.AUDIOS = [
     date: "03.11.2017",
     desc: "",
     vk: "",
-    src: "https://yakovshakhov.com/assets/audio/vershina-snezhnaya.mp3",
+    src: "https://yakovshakhov.ru/assets/audio/vershina-snezhnaya.mp3",
     poem: "2017_11_03_4224"
   },
   {
@@ -25,7 +25,7 @@ window.AUDIOS = [
     date: "29.11.2016",
     desc: "",
     vk: "",
-    src: "https://yakovshakhov.com/assets/audio/ieroglif-obnovlenya.mp3",
+    src: "https://yakovshakhov.ru/assets/audio/ieroglif-obnovlenya.mp3",
     poem: "2016_11_29_7394"
   },
   {
@@ -35,7 +35,7 @@ window.AUDIOS = [
     date: "21.11.2016",
     desc: "",
     vk: "",
-    src: "https://yakovshakhov.com/assets/audio/tsarstvuy.mp3",
+    src: "https://yakovshakhov.ru/assets/audio/tsarstvuy.mp3",
     poem: "2016_11_21_3562"
   },
   {
@@ -45,7 +45,7 @@ window.AUDIOS = [
     date: "01.11.2016",
     desc: "",
     vk: "",
-    src: "https://yakovshakhov.com/assets/audio/itog-dorog.mp3",
+    src: "https://yakovshakhov.ru/assets/audio/itog-dorog.mp3",
     poem: "2016_11_01_3078"
   },
   {
@@ -55,7 +55,7 @@ window.AUDIOS = [
     date: "17.09.2016",
     desc: "",
     vk: "",
-    src: "https://yakovshakhov.com/assets/audio/ya-s-dona-ona-s-volgi.mp3",
+    src: "https://yakovshakhov.ru/assets/audio/ya-s-dona-ona-s-volgi.mp3",
     poem: "2016_09_17_5548"
   },
   {
@@ -65,7 +65,7 @@ window.AUDIOS = [
     date: "18.08.2016",
     desc: "",
     vk: "",
-    src: "https://yakovshakhov.com/assets/audio/odinochestvo.mp3",
+    src: "https://yakovshakhov.ru/assets/audio/odinochestvo.mp3",
     poem: "2016_08_18_5482"
   },
   {
@@ -75,7 +75,7 @@ window.AUDIOS = [
     date: "24.03.2015",
     desc: "",
     vk: "",
-    src: "https://yakovshakhov.com/assets/audio/ta-kotoraya-rodila.mp3",
+    src: "https://yakovshakhov.ru/assets/audio/ta-kotoraya-rodila.mp3",
     poem: "2015_03_24_783"
   },
   {
@@ -85,7 +85,7 @@ window.AUDIOS = [
     date: "22.06.2015",
     desc: "",
     vk: "",
-    src: "https://yakovshakhov.com/assets/audio/u-izborskoy-kreposti.mp3",
+    src: "https://yakovshakhov.ru/assets/audio/u-izborskoy-kreposti.mp3",
     poem: "2015_06_22_4193"
   },
   {
@@ -95,7 +95,7 @@ window.AUDIOS = [
     date: "21.04.2015",
     desc: "",
     vk: "",
-    src: "https://yakovshakhov.com/assets/audio/peterburgskaya-latina.mp3",
+    src: "https://yakovshakhov.ru/assets/audio/peterburgskaya-latina.mp3",
     poem: "2015_04_21_3297"
   },
   {
@@ -105,7 +105,7 @@ window.AUDIOS = [
     date: "18.03.2015",
     desc: "",
     vk: "",
-    src: "https://yakovshakhov.com/assets/audio/ldinki.mp3",
+    src: "https://yakovshakhov.ru/assets/audio/ldinki.mp3",
     poem: "2015_03_18_4499"
   },
   {
@@ -115,7 +115,7 @@ window.AUDIOS = [
     date: "06.11.2014",
     desc: "",
     vk: "",
-    src: "https://yakovshakhov.com/assets/audio/elchik.mp3",
+    src: "https://yakovshakhov.ru/assets/audio/elchik.mp3",
     poem: "2014_11_06_4728"
   },
   {
@@ -125,7 +125,7 @@ window.AUDIOS = [
     date: "04.03.2014",
     desc: "",
     vk: "",
-    src: "https://yakovshakhov.com/assets/audio/russkiy-tsar.mp3",
+    src: "https://yakovshakhov.ru/assets/audio/russkiy-tsar.mp3",
     poem: "2014_03_04_11055"
   },
   {
@@ -135,7 +135,7 @@ window.AUDIOS = [
     date: "18.02.2014",
     desc: "",
     vk: "",
-    src: "https://yakovshakhov.com/assets/audio/ot-primy-do-ryby.mp3",
+    src: "https://yakovshakhov.ru/assets/audio/ot-primy-do-ryby.mp3",
     poem: "2014_02_18_1197"
   },
   {
@@ -145,7 +145,7 @@ window.AUDIOS = [
     date: "12.03.2011",
     desc: "",
     vk: "",
-    src: "https://yakovshakhov.com/assets/audio/kazachya-zarisovka.mp3",
+    src: "https://yakovshakhov.ru/assets/audio/kazachya-zarisovka.mp3",
     poem: "2011_03_12_3760"
   },
   {
@@ -155,7 +155,7 @@ window.AUDIOS = [
     date: "20.11.2010",
     desc: "",
     vk: "",
-    src: "https://yakovshakhov.com/assets/audio/muha.mp3",
+    src: "https://yakovshakhov.ru/assets/audio/muha.mp3",
     poem: "2010_11_20_8243"
   }
 ];
