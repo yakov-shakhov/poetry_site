@@ -9,6 +9,76 @@
    Сортировка списка — по дате, свежие сверху (как у стихов). */
 window.AUDIOS = [
   {
+    id: "vershina-snezhnaya",
+    title: "«Вершина снежная»",
+    reader: "читает автор",
+    date: "03.11.2017",
+    desc: "",
+    vk: "",
+    src: "https://yakovshakhov.com/assets/audio/vershina-snezhnaya.mp3",
+    poem: "2017_11_03_4224"
+  },
+  {
+    id: "ieroglif-obnovlenya",
+    title: "«Иероглиф обновленья»",
+    reader: "читает автор",
+    date: "29.11.2016",
+    desc: "",
+    vk: "",
+    src: "https://yakovshakhov.com/assets/audio/ieroglif-obnovlenya.mp3",
+    poem: "2016_11_29_7394"
+  },
+  {
+    id: "tsarstvuy",
+    title: "«Царствуй»",
+    reader: "читает автор",
+    date: "21.11.2016",
+    desc: "",
+    vk: "",
+    src: "https://yakovshakhov.com/assets/audio/tsarstvuy.mp3",
+    poem: "2016_11_21_3562"
+  },
+  {
+    id: "itog-dorog",
+    title: "«Итог дорог»",
+    reader: "читает автор",
+    date: "01.11.2016",
+    desc: "",
+    vk: "",
+    src: "https://yakovshakhov.com/assets/audio/itog-dorog.mp3",
+    poem: "2016_11_01_3078"
+  },
+  {
+    id: "ya-s-dona-ona-s-volgi",
+    title: "«Я - с Дона, она - с Волги»",
+    reader: "читает автор",
+    date: "17.09.2016",
+    desc: "",
+    vk: "",
+    src: "https://yakovshakhov.com/assets/audio/ya-s-dona-ona-s-volgi.mp3",
+    poem: "2016_09_17_5548"
+  },
+  {
+    id: "odinochestvo",
+    title: "«Одиночество»",
+    reader: "читает автор",
+    date: "18.08.2016",
+    desc: "",
+    vk: "",
+    src: "https://yakovshakhov.com/assets/audio/odinochestvo.mp3",
+    poem: "2016_08_18_5482"
+  },
+  {
+    id: "ta-kotoraya-rodila",
+    title: "«Та, которая родила...»",
+    reader: "читает автор",
+    date: "24.03.2015",
+    desc: "",
+    vk: "",
+    src: "https://yakovshakhov.com/assets/audio/ta-kotoraya-rodila.mp3",
+    poem: "2015_03_24_783"
+  },
+  {
     id: "u-izborskoy-kreposti",
     title: "«У Изборской крепости…»",
     reader: "читает автор",
