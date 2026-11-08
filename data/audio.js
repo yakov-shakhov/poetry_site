@@ -10,7 +10,7 @@
 window.AUDIOS = [
   {
     id: "vershina-snezhnaya",
-    title: "«Вершина снежная»",
+    title: "Вершина снежная",
     reader: "читает автор",
     date: "03.11.2017",
     desc: "",
@@ -20,7 +20,7 @@ window.AUDIOS = [
   },
   {
     id: "ieroglif-obnovlenya",
-    title: "«Иероглиф обновленья»",
+    title: "Иероглиф обновленья",
     reader: "читает автор",
     date: "29.11.2016",
     desc: "",
@@ -30,7 +30,7 @@ window.AUDIOS = [
   },
   {
     id: "tsarstvuy",
-    title: "«Царствуй»",
+    title: "Царствуй",
     reader: "читает автор",
     date: "21.11.2016",
     desc: "",
@@ -40,7 +40,7 @@ window.AUDIOS = [
   },
   {
     id: "itog-dorog",
-    title: "«Итог дорог»",
+    title: "Итог дорог",
     reader: "читает автор",
     date: "01.11.2016",
     desc: "",
@@ -50,7 +50,7 @@ window.AUDIOS = [
   },
   {
     id: "ya-s-dona-ona-s-volgi",
-    title: "«Я - с Дона, она - с Волги»",
+    title: "Я - с Дона, она - с Волги",
     reader: "читает автор",
     date: "17.09.2016",
     desc: "",
@@ -60,7 +60,7 @@ window.AUDIOS = [
   },
   {
     id: "odinochestvo",
-    title: "«Одиночество»",
+    title: "Одиночество",
     reader: "читает автор",
     date: "18.08.2016",
     desc: "",
@@ -70,7 +70,7 @@ window.AUDIOS = [
   },
   {
     id: "ta-kotoraya-rodila",
-    title: "«Та, которая родила...»",
+    title: "Та, которая родила...",
     reader: "читает автор",
     date: "24.03.2015",
     desc: "",
@@ -80,7 +80,7 @@ window.AUDIOS = [
   },
   {
     id: "u-izborskoy-kreposti",
-    title: "«У Изборской крепости…»",
+    title: "У Изборской крепости…",
     reader: "читает автор",
     date: "22.06.2015",
     desc: "",
@@ -90,7 +90,7 @@ window.AUDIOS = [
   },
   {
     id: "peterburgskaya-latina",
-    title: "«Петербургская латина»",
+    title: "Петербургская латина",
     reader: "читает автор",
     date: "21.04.2015",
     desc: "",
@@ -100,7 +100,7 @@ window.AUDIOS = [
   },
   {
     id: "ldinki",
-    title: "«Льдинки»",
+    title: "Льдинки",
     reader: "читает автор",
     date: "18.03.2015",
     desc: "",
@@ -110,7 +110,7 @@ window.AUDIOS = [
   },
   {
     id: "elchik",
-    title: "«Ельчик»",
+    title: "Ельчик",
     reader: "читает автор",
     date: "06.11.2014",
     desc: "",
@@ -120,7 +120,7 @@ window.AUDIOS = [
   },
   {
     id: "russkiy-tsar",
-    title: "«Русский царь»",
+    title: "Русский царь",
     reader: "читает автор",
     date: "04.03.2014",
     desc: "",
@@ -130,7 +130,7 @@ window.AUDIOS = [
   },
   {
     id: "ot-primy-do-ryby",
-    title: "«От Примы до Рыбы…»",
+    title: "От Примы до Рыбы…",
     reader: "читает автор",
     date: "18.02.2014",
     desc: "",
@@ -140,7 +140,7 @@ window.AUDIOS = [
   },
   {
     id: "kazachya-zarisovka",
-    title: "«Казачья зарисовка»",
+    title: "Казачья зарисовка",
     reader: "читает автор",
     date: "12.03.2011",
     desc: "",
@@ -150,7 +150,7 @@ window.AUDIOS = [
   },
   {
     id: "muha",
-    title: "«Муха»",
+    title: "Муха",
     reader: "читает автор",
     date: "20.11.2010",
     desc: "",
