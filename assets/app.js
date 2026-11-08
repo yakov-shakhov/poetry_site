@@ -743,13 +743,11 @@
     document.title = "Видео — Яков Шахов — стихи";
     var all = videos();
     var cards = all.map(function (v) {
-      var p = poemById(v.poem);
       return '<article class="card video-card" data-href="#video/' + esc(v.id) + '">' +
         '<div class="vcover" aria-hidden="true">' +
           (v.cover ? '<img src="' + esc(v.cover) + '" alt="" loading="lazy">' : '') +
           '<span class="vplay">' + PLAY_SVG + '</span>' +
         '</div>' +
-        (p ? '<a class="tag" href="' + listHref("", normGenre(p.genre), 1) + '">' + esc(normGenre(p.genre)) + '</a>' : '') +
         '<h3><a href="#video/' + esc(v.id) + '">' + esc(v.title) + '</a></h3>' +
         '<div class="foot"><span>' + esc(showDate(v.date)) + '</span>' +
           '<a href="#video/' + esc(v.id) + '">Смотреть →</a></div>' +
