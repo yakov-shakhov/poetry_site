@@ -803,6 +803,7 @@
           '<h2>' + esc(v.title) + '</h2>' +
           '<div class="meta"><span>' + esc(showDate(v.date)) + '</span>' +
             '<span class="meta-pos">' + (i + 1) + ' из ' + list.length + '</span></div>' +
+          (v.desc ? '<div class="vdesc">' + esc(v.desc) + '</div>' : '') +
           (p ? '<a class="vpoem" href="#poem/' + esc(p.id) + '">Стихотворение: «' + esc(p.title) + '» →</a>' : '') +
         '</article>' +
         '<nav class="poem-nav">' +
