@@ -589,7 +589,7 @@
     app.innerHTML = '<div class="wrap page-center">' +
       '<article class="poem">' +
         '<a class="tag" href="' + listHref("", normGenre(p.genre), 1) + '">' + esc(normGenre(p.genre)) + '</a>' +
-        '<h2>' + esc(p.title) + '</h2>' +
+        '<h1>' + esc(p.title) + '</h1>' +
         /* дата слева, счётчик «x из N» справа (дублирует счётчик внизу) */
         '<div class="meta"><span>' + esc(showDate(p.date)) + '</span>' +
           '<span class="meta-pos">' + (i + 1) + ' из ' + list.length + '</span></div>' +

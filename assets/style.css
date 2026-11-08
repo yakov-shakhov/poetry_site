@@ -280,7 +280,7 @@ article.poem {
   .layout main { animation: none; }
 }
 article.poem .tag { font-size: 13px; }
-article.poem h2 { font-size: 32px; margin: 18px 0 4px; letter-spacing: .02em; line-height: 1.3; text-wrap: pretty; }
+article.poem h1 { font-size: 32px; margin: 18px 0 4px; letter-spacing: .02em; line-height: 1.3; text-wrap: pretty; }
 /* дата: разрядка + тонкий отделитель между датой и текстом;
    дата прижата влево, счётчик «x из N» — вправо */
 article.poem .meta {
@@ -607,7 +607,7 @@ footer.site {
   .card { padding: 20px; }
   .card h3 { font-size: 20px; }
   article.poem { padding: 26px 20px; margin: 24px 0; }
-  article.poem h2 { font-size: 26px; }
+  article.poem h1 { font-size: 26px; }
   article.video-full { padding: 14px 14px 18px; margin: 20px 0 0; }
   article.video-full h2 { font-size: 21px; margin-top: 16px; }
   .vpoem { margin-top: 14px; }
@@ -637,7 +637,7 @@ footer.site {
     padding: 0; margin: 0; max-width: none; animation: none;
   }
   article.poem .tag { display: none; }
-  article.poem h2 { font-size: 20pt; margin: 0 0 6pt; }
+  article.poem h1 { font-size: 20pt; margin: 0 0 6pt; }
   article.poem .meta {
     color: #444; letter-spacing: .04em;
     padding-bottom: 8pt; border-bottom: 1px solid #999; margin-bottom: 16pt;
