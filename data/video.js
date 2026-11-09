@@ -17,11 +17,11 @@ window.VIDEOS = [
     poem: ""
   },
   {
-    id: "74441888_456250577",
+    id: "101763471_456239056",
     title: "Прогулка с Иваном Буниным",
-    desc: "",
+    desc: "Яков Шахов и его стихотворение «Ивану Бунину»\nЕлец, 2021 год",
     date: "06.06.2021",
-    vk: "https://vkvideo.ru/video-74441888_456250577",
+    vk: "https://vkvideo.ru/video-101763471_456239056",
     cover: "assets/video-covers/ivanu-buninu.jpg",
     poem: "2015_11_14_5821"
   }
