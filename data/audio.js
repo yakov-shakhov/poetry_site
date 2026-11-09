@@ -59,6 +59,16 @@ window.AUDIOS = [
     poem: "2016_09_17_5548"
   },
   {
+    id: "brusnichnoe-utro",
+    title: "Брусничное утро",
+    reader: "читает автор",
+    date: "08.10.2016",
+    desc: "",
+    vk: "",
+    src: "https://yakovshakhov.ru/assets/audio/brusnichnoe-utro.mp3",
+    poem: "2016_10_12_9752"
+  },
+  {
     id: "odinochestvo",
     title: "Одиночество",
     reader: "читает автор",
