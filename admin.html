@@ -569,8 +569,10 @@
           renderAll();
         })
         .catch(function (er) {
-          status("Ошибка сохранения: " + er.message, true);
-          loadAll().catch(function () {});
+          var m = "Ошибка сохранения: " + er.message +
+            ". Проверьте токен: poetry_site → Contents → Read and write.";
+          loadAll().then(function () { status(m, true); })
+            .catch(function () { status(m, true); });
         });
     });
     function resetPoemForm() {
