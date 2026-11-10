@@ -1,0 +1,46 @@
+name: regen-pages
+
+# Перегенерация poem/*.html и sitemap.xml после изменения data/*.
+# Запускается на любой пуш в master. Коммиты GITHUB_TOKEN сами
+# не триггерят workflow — зацикливания нет.
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "data/**"
+      - "assets/**"
+      - "index.html"
+      - "scripts/**"
+      - ".github/workflows/regen.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: regen-pages
+  cancel-in-progress: false
+
+jobs:
+  regen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Проверка данных
+        run: node scripts/check_data.js
+
+      - name: Генерация страниц стихов и sitemap
+        run: python3 scripts/generate_pages.py
+
+      - name: Коммит, если есть изменения
+        run: |
+          git config user.name "poetry-site-bot"
+          git config user.email "yakovshakhov@users.noreply.github.com"
+          git add poem sitemap.xml
+          if git diff --cached --quiet; then
+            echo "Изменений нет"
+          else
+            git commit -m "Перегенерация poem/ и sitemap.xml [skip data]"
+            git push
+          fi

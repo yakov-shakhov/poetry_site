@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <title>Управление стихами — Яков Шахов</title>
+  <title>Управление сайтом — Яков Шахов</title>
   <script>
     /* Тема: как на основной странице (без кнопки, только наследование выбора). */
     (function () {
@@ -17,6 +17,46 @@
     })();
   </script>
   <link rel="stylesheet" href="assets/style.css">
+  <style>
+    /* Локальные стили админки — поверх базового css сайта */
+    .atabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 26px; }
+    .atabs button {
+      font: inherit; cursor: pointer; padding: 8px 16px; border-radius: 8px;
+      border: 1px solid var(--border, #ccc); background: transparent; color: inherit;
+    }
+    .atabs button.active { background: var(--accent, #06c); color: #fff; border-color: var(--accent, #06c); }
+    .atab { display: none; }
+    .atab.active { display: block; }
+    .acard {
+      border: 1px solid var(--border, #ccc); border-radius: 12px;
+      padding: 18px 20px; margin: 0 0 22px; max-width: 760px;
+    }
+    .acard h3 { margin-top: 0; }
+    .aform label { display: block; margin: 12px 0 4px; }
+    .aform input[type="text"], .aform input[type="password"], .aform input[type="file"],
+    .aform textarea, .aform select {
+      width: 100%; box-sizing: border-box; font: inherit; padding: 8px 10px;
+      border: 1px solid var(--border, #ccc); border-radius: 8px;
+      background: var(--bg, #fff); color: inherit;
+    }
+    .aform textarea { min-height: 180px; resize: vertical; }
+    .aform textarea.small { min-height: 70px; }
+    .arow { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
+    .alist { list-style: none; margin: 0; padding: 0; max-width: 760px; }
+    .alist li {
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+      padding: 10px 4px; border-bottom: 1px solid var(--border, #ddd);
+    }
+    .alist .t { min-width: 0; }
+    .alist .t a { color: inherit; }
+    .alist .meta { color: var(--muted, #888); font-size: 14px; }
+    .amuted { color: var(--muted, #888); }
+    .astatus { margin: 10px 0; min-height: 1.4em; }
+    .astatus.err { color: #c33; white-space: pre-wrap; }
+    .btn.small { padding: 4px 10px; font-size: 14px; }
+    .afield2 { display: flex; gap: 14px; flex-wrap: wrap; }
+    .afield2 > div { flex: 1 1 200px; }
+  </style>
 </head>
 <body>
   <header class="site">
@@ -29,58 +69,209 @@
   </header>
 
   <main class="wrap">
-    <h2 class="section">Управление стихами</h2>
+    <h2 class="section">Управление сайтом</h2>
 
-    <div class="notice">
-      Здесь можно добавлять, редактировать и удалять стихотворения.
-      Изменения сохраняются в этом браузере и сразу видны на сайте.
-      Чтобы опубликовать их для всех, нажмите <b>«Скачать poems.js»</b>
-      и замените этим файлом <b>data/poems.js</b> в папке сайта,
-      затем опубликуйте изменения (подробно — в <b>instruction.txt</b>).
+    <div id="guard" class="notice" hidden>
+      <p><b>Админка доступна только из песочницы</b> — по адресу
+        <code>yakov-shakhov.github.io/poetry_site/admin.html</code>.</p>
+      <p id="guardReason" class="amuted"></p>
     </div>
 
-    <form class="admin-form" id="poemForm">
-      <input type="hidden" name="id">
-      <label for="f-title">Название</label>
-      <input type="text" id="f-title" name="title" required>
-      <label for="f-genre">Рубрика</label>
-      <input type="text" id="f-genre" name="genre" placeholder="например: философская лирика" list="genres">
-      <datalist id="genres"></datalist>
-      <label for="f-date">Дата (ГГГГ-ММ-ДД)</label>
-      <input type="text" id="f-date" name="date" placeholder="2026-10-19">
-      <label for="f-text">Текст стихотворения</label>
-      <textarea id="f-text" name="text" required></textarea>
-      <div class="admin-row">
-        <button type="submit" class="btn" id="saveBtn">Добавить стих</button>
-        <button type="button" class="btn ghost" id="resetBtn" hidden>Отменить правку</button>
-        <span id="formMsg"></span>
+    <div id="auth" class="acard aform" hidden>
+      <h3>Вход</h3>
+      <p class="amuted">Нужен GitHub-токен (fine-grained) с правами:
+        <b>poetry_site</b> — Contents: Read and write;
+        <b>poetry_site_prod</b> — Actions: Read and write.
+        Токен хранится только в этом браузере.</p>
+      <label for="tokenInput">Токен</label>
+      <input type="password" id="tokenInput" autocomplete="off">
+      <div class="arow">
+        <label style="margin:0"><input type="checkbox" id="rememberChk" checked> Запомнить в этом браузере</label>
       </div>
-    </form>
+      <div class="arow">
+        <button type="button" class="btn" id="loginBtn">Войти</button>
+        <span id="authMsg" class="astatus"></span>
+      </div>
+    </div>
 
-    <h2 class="section">Все произведения <span id="cnt" style="color:var(--muted);font-size:17px"></span></h2>
-    <ul class="poems admin-list" id="list"></ul>
+    <div id="app" hidden>
+      <div class="atabs">
+        <button type="button" data-tab="poems" class="active">Стихи</button>
+        <button type="button" data-tab="audio">Аудио</button>
+        <button type="button" data-tab="video">Видео</button>
+        <button type="button" data-tab="author">Биография</button>
+        <button type="button" data-tab="prod">В прод</button>
+      </div>
 
-    <div class="admin-row" style="margin:26px 0 50px">
-      <button type="button" class="btn" id="exportBtn">Скачать poems.js</button>
-      <button type="button" class="btn ghost" id="resetAllBtn">Сбросить локальные изменения</button>
+      <div class="astatus" id="status"></div>
+
+      <!-- ══ СТИХИ ══ -->
+      <div class="atab active" id="tab-poems">
+        <div class="acard aform">
+          <h3 id="poemFormTitle">Новый стих</h3>
+          <form id="poemForm">
+            <input type="hidden" name="id">
+            <label>Название</label>
+            <input type="text" name="title" required>
+            <label>Рубрика</label>
+            <input type="text" name="genre" list="genres" placeholder="философская лирика">
+            <datalist id="genres"></datalist>
+            <label>Дата (ДД.ММ.ГГГГ)</label>
+            <input type="text" name="date" placeholder="14.02.2021">
+            <label>Текст</label>
+            <textarea name="text" required></textarea>
+            <div class="arow">
+              <button type="submit" class="btn" id="poemSaveBtn">Добавить</button>
+              <button type="button" class="btn ghost" id="poemResetBtn" hidden>Отменить правку</button>
+            </div>
+          </form>
+        </div>
+        <div class="acard">
+          <div class="arow" style="margin-top:0">
+            <input type="text" id="poemSearch" placeholder="Поиск по названию и тексту…"
+                   style="flex:1;font:inherit;padding:8px 10px;border:1px solid var(--border,#ccc);border-radius:8px;background:var(--bg,#fff);color:inherit">
+            <button type="button" class="btn ghost small" id="reloadBtn">Перечитать с GitHub</button>
+          </div>
+          <ul class="alist" id="poemList" style="margin-top:10px"></ul>
+        </div>
+      </div>
+
+      <!-- ══ АУДИО ══ -->
+      <div class="atab" id="tab-audio">
+        <div class="acard aform">
+          <h3 id="audioFormTitle">Новая аудиозапись</h3>
+          <form id="audioForm">
+            <input type="hidden" name="id">
+            <label>Название</label>
+            <input type="text" name="title" required>
+            <label>MP3-файл <span class="amuted">(при правке можно оставить прежний)</span></label>
+            <input type="file" name="file" accept=".mp3,audio/mpeg">
+            <div class="afield2">
+              <div>
+                <label>Дата (ДД.ММ.ГГГГ)</label>
+                <input type="text" name="date" placeholder="14.02.2021">
+              </div>
+              <div>
+                <label>Исполнитель</label>
+                <input type="text" name="reader" placeholder="читает автор">
+              </div>
+            </div>
+            <label>Ссылка VK (необязательно)</label>
+            <input type="text" name="vk" placeholder="https://vk.ru/…">
+            <label>Описание</label>
+            <textarea name="desc" class="small"></textarea>
+            <label>Связанный стих</label>
+            <select name="poem"><option value="">— нет —</option></select>
+            <div class="arow">
+              <button type="submit" class="btn">Добавить</button>
+              <button type="button" class="btn ghost" id="audioResetBtn" hidden>Отменить правку</button>
+            </div>
+          </form>
+        </div>
+        <div class="acard">
+          <ul class="alist" id="audioList"></ul>
+        </div>
+      </div>
+
+      <!-- ══ ВИДЕО ══ -->
+      <div class="atab" id="tab-video">
+        <div class="acard aform">
+          <h3 id="videoFormTitle">Новое видео</h3>
+          <form id="videoForm">
+            <input type="hidden" name="id">
+            <label>Ссылка VK Видео</label>
+            <input type="text" name="vk" placeholder="https://vkvideo.ru/video-101763471_456239055" required>
+            <label>Название</label>
+            <input type="text" name="title" required>
+            <label>Обложка (JPG) <span class="amuted">(при правке можно оставить прежнюю)</span></label>
+            <input type="file" name="cover" accept=".jpg,.jpeg,image/jpeg">
+            <div class="afield2">
+              <div>
+                <label>Дата (ДД.ММ.ГГГГ)</label>
+                <input type="text" name="date" placeholder="08.08.2017">
+              </div>
+              <div>
+                <label>Связанный стих</label>
+                <select name="poem"><option value="">— нет —</option></select>
+              </div>
+            </div>
+            <label>Описание</label>
+            <textarea name="desc" class="small"></textarea>
+            <div class="arow">
+              <button type="submit" class="btn">Добавить</button>
+              <button type="button" class="btn ghost" id="videoResetBtn" hidden>Отменить правку</button>
+            </div>
+          </form>
+        </div>
+        <div class="acard">
+          <ul class="alist" id="videoList"></ul>
+        </div>
+      </div>
+
+      <!-- ══ БИОГРАФИЯ ══ -->
+      <div class="atab" id="tab-author">
+        <div class="acard aform">
+          <h3>Сведения об авторе</h3>
+          <form id="authorForm">
+            <label>Имя</label>
+            <input type="text" name="name" required>
+            <label>Короткая строка о себе</label>
+            <input type="text" name="bio">
+            <label>Фото — файл <span class="amuted">(заменит assets/photo.png)</span></label>
+            <input type="file" name="photo" accept=".png,image/png">
+            <label>Ссылка VK</label>
+            <input type="text" name="vk">
+            <label>Ссылка Telegram</label>
+            <input type="text" name="telegram">
+            <label>E-mail</label>
+            <input type="text" name="email">
+            <div class="arow">
+              <button type="submit" class="btn">Сохранить</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ══ В ПРОД ══ -->
+      <div class="atab" id="tab-prod">
+        <div class="acard">
+          <h3>Публикация на yakovshakhov.ru</h3>
+          <p>Запускает workflow <code>sync-from-sandbox</code> в прод-репозитории:
+            переносит <code>data/</code>, <code>assets/</code>, <code>index.html</code>,
+            перегенерирует <code>poem/</code> и sitemap, не трогает <code>robots.txt</code>,
+            CNAME и админку, проверяет отсутствие noindex. Песочница и прод обновятся
+            через 1–3 минуты.</p>
+          <p class="amuted">Сначала проверьте результат здесь, на
+            <code>yakov-shakhov.github.io/poetry_site/</code>.</p>
+          <div class="arow">
+            <button type="button" class="btn" id="prodBtn">Опубликовать в прод</button>
+            <span id="prodStatus" class="astatus"></span>
+          </div>
+        </div>
+        <div class="acard">
+          <div class="arow" style="margin-top:0">
+            <button type="button" class="btn ghost" id="logoutBtn">Забыть токен и выйти</button>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 
-  <script src="data/poems.js"></script>
   <script>
   (function () {
     "use strict";
-    var KEY = "poetry_admin_poems";
-    var poems;
 
-    function load() {
-      try {
-        var s = localStorage.getItem(KEY);
-        if (s) return JSON.parse(s);
-      } catch (e) { /* перечитаем исходный файл */ }
-      return window.POEMS.map(function (p) { return Object.assign({}, p); });
-    }
-    function persist() { localStorage.setItem(KEY, JSON.stringify(poems)); }
+    /* ── Константы окружения ─────────────────────────────────────── */
+    var OWNER = "yakov-shakhov";
+    var SANDBOX = OWNER + "/poetry_site";
+    var PROD = OWNER + "/poetry_site_prod";
+    var API = "https://api.github.com";
+    var BRANCH = "master";
+    var SYNC_WORKFLOW = "sync-from-sandbox.yml";
+    var TOKEN_KEY = "poetry_admin_token";
+
+    /* ── Мелкие helpers ──────────────────────────────────────────── */
+    function $(id) { return document.getElementById(id); }
     function esc(s) {
       return String(s == null ? "" : s).replace(/&/g, "&amp;")
         .replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -89,102 +280,654 @@
       var m = /^(\d{2})\.(\d{2})\.(\d{4})/.exec(d || "");
       return m ? m[3] + m[2] + m[1] : String(d || "");
     }
-    function sorted() {
-      return poems.slice().sort(function (a, b) {
+    function byDateDesc(arr) {
+      return arr.slice().sort(function (a, b) {
         return dateKey(b.date).localeCompare(dateKey(a.date));
       });
     }
-    function newId(title) {
-      var slug = String(title).toLowerCase()
-        .replace(/[^a-zа-яё0-9]+/gi, "-").replace(/^-+|-+$/g, "").slice(0, 40);
-      return (slug || "poem") + "-" + Date.now().toString(36);
+    var TRANSLIT = {
+      "а":"a","б":"b","в":"v","г":"g","д":"d","е":"e","ё":"e","ж":"zh","з":"z","и":"i",
+      "й":"y","к":"k","л":"l","м":"m","н":"n","о":"o","п":"p","р":"r","с":"s","т":"t",
+      "у":"u","ф":"f","х":"h","ц":"ts","ч":"ch","ш":"sh","щ":"sch","ъ":"","ы":"y","ь":"",
+      "э":"e","ю":"yu","я":"ya"
+    };
+    function slugify(title) {
+      var s = String(title).toLowerCase().split("").map(function (ch) {
+        if (TRANSLIT[ch] !== undefined) return TRANSLIT[ch];
+        return ch;
+      }).join("");
+      s = s.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48);
+      return s || "item";
+    }
+    function normDatePoem(v) {
+      v = String(v || "").trim();
+      if (/^\d{2}\.\d{2}\.\d{4}$/.test(v)) return v + " 00:00";
+      return v;
+    }
+    function normDate(v) {
+      return String(v || "").trim();
+    }
+    function status(msg, isErr) {
+      var el = $("status");
+      el.textContent = msg || "";
+      el.className = "astatus" + (isErr ? " err" : "");
     }
 
-    var listEl = document.getElementById("list");
-    var form = document.getElementById("poemForm");
-    var msg = document.getElementById("formMsg");
+    /* ── base64 (UTF-8-safe) ─────────────────────────────────────── */
+    function b64encode(str) {
+      var bytes = new TextEncoder().encode(str), bin = [], CH = 0x8000;
+      for (var i = 0; i < bytes.length; i += CH) {
+        bin.push(String.fromCharCode.apply(null, bytes.subarray(i, i + CH)));
+      }
+      return btoa(bin.join(""));
+    }
+    function b64decode(b64) {
+      var bin = atob(String(b64).replace(/\s/g, "")), bytes = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return new TextDecoder("utf-8").decode(bytes);
+    }
 
-    function render() {
-      var s = sorted();
-      document.getElementById("cnt").textContent = "— " + s.length;
-      listEl.innerHTML = s.map(function (p) {
-        return '<li><div class="t">' + esc(p.title) +
-          '<div class="meta">' + esc(p.genre || "без рубрики") + " · " + esc(p.date || "") + '</div></div>' +
-          '<div class="actions">' +
-            '<button type="button" class="btn ghost small" data-edit="' + esc(p.id) + '">Правка</button>' +
-            '<button type="button" class="btn danger small" data-del="' + esc(p.id) + '">Удалить</button>' +
-          '</div></li>';
+    /* ── GitHub API ──────────────────────────────────────────────── */
+    var token = "";
+    function api(method, path, body) {
+      return fetch(API + path, {
+        method: method,
+        headers: {
+          "Authorization": "Bearer " + token,
+          "Accept": "application/vnd.github+json",
+          "X-GitHub-Api-Version": "2022-11-28",
+          "Content-Type": "application/json"
+        },
+        body: body ? JSON.stringify(body) : undefined
+      }).then(function (r) {
+        return r.json().catch(function () { return {}; }).then(function (j) {
+          if (!r.ok) {
+            var e = new Error((j && j.message) ? (j.message + " (HTTP " + r.status + ")") : ("HTTP " + r.status));
+            e.status = r.status;
+            throw e;
+          }
+          return j;
+        });
+      });
+    }
+    function getFile(repo, path) {
+      return api("GET", "/repos/" + repo + "/contents/" + path + "?ref=" + BRANCH)
+        .then(function (j) { return { sha: j.sha, text: b64decode(j.content) }; });
+    }
+    function putFile(repo, path, text, sha, message) {
+      return api("PUT", "/repos/" + repo + "/contents/" + path, {
+        message: message, content: b64encode(text), sha: sha || undefined, branch: BRANCH
+      });
+    }
+    function deleteFile(repo, path, sha, message) {
+      return api("DELETE", "/repos/" + repo + "/contents/" + path, {
+        message: message, sha: sha, branch: BRANCH
+      });
+    }
+    function evalData(code, key) {
+      var w = {};
+      new Function("window", code)(w);
+      return w[key];
+    }
+    function loadData(repo, file, key) {
+      return getFile(repo, "data/" + file).then(function (f) {
+        dataShas[file] = f.sha;
+        return evalData(f.text, key);
+      });
+    }
+
+    /* ── Данные в памяти ─────────────────────────────────────────── */
+    var dataShas = {};      // "poems.js" -> sha
+    var poems = [], audios = [], videos = [], author = {};
+
+    function serialize(key, val) {
+      return "window." + key + " = " + JSON.stringify(val, null, 1) + ";\n";
+    }
+    function saveDataFile(file, key, val, message) {
+      return putFile(SANDBOX, "data/" + file, serialize(key, val), dataShas[file], message)
+        .then(function (j) { dataShas[file] = j.commit.sha ? j.content.sha : dataShas[file]; });
+    }
+
+    /* ── Host-guard: админка только в песочнице ──────────────────── */
+    (function guard() {
+      var ok = false, why = "";
+      try {
+        var h = location.hostname, p = location.pathname;
+        if (h === "yakov-shakhov.github.io" && p.indexOf("/poetry_site/") === 0) ok = true;
+        else if (h === "localhost" || h === "127.0.0.1" || location.protocol === "file:") ok = true; // локальная разработка
+        else why = "Хост: " + h + p;
+      } catch (e) { why = String(e); }
+      if (!ok) {
+        $("guard").hidden = false;
+        $("guardReason").textContent = why;
+        throw new Error("admin: wrong host");
+      }
+    })();
+
+    /* ── Авторизация ─────────────────────────────────────────────── */
+    function showAuth(msg) {
+      $("app").hidden = true;
+      $("auth").hidden = false;
+      $("authMsg").textContent = msg || "";
+    }
+    function login(tok, remember) {
+      token = tok.replace(/^token\s+/i, "").trim();
+      $("authMsg").textContent = "Проверяю токен…";
+      // Проверяем доступ к data-файлу песочницы (Contents:read).
+      // Доступ к прод-репо не обязателен для входа (нужен только для «В прод»).
+      return api("GET", "/repos/" + SANDBOX + "/contents/data/poems.js?ref=" + BRANCH)
+        .then(function () { return api("GET", "/repos/" + PROD).catch(function () { return null; }); })
+        .then(function () {
+          token = tok;
+          try {
+            if (remember) localStorage.setItem(TOKEN_KEY, token);
+            else sessionStorage.setItem(TOKEN_KEY, token);
+          } catch (e) { /* приватный режим — токен только в памяти */ }
+          $("auth").hidden = true;
+          return loadAll().then(function () {
+            $("app").hidden = false;
+            status("Загружено с GitHub: стихов " + poems.length + ", аудио " + audios.length + ", видео " + videos.length + ".");
+          });
+        })
+        .catch(function (e) {
+          showAuth("Не удалось войти: " + e.message +
+            " Проверьте токен: Contents RW на poetry_site, Actions RW на poetry_site_prod.");
+        });
+    }
+    $("loginBtn").addEventListener("click", function () {
+      login($("tokenInput").value, $("rememberChk").checked);
+    });
+    $("logoutBtn").addEventListener("click", function () {
+      try {
+        localStorage.removeItem(TOKEN_KEY);
+        sessionStorage.removeItem(TOKEN_KEY);
+      } catch (e) {}
+      token = "";
+      showAuth("");
+    });
+
+    function storedToken() {
+      try {
+        return sessionStorage.getItem(TOKEN_KEY) || localStorage.getItem(TOKEN_KEY) || "";
+      } catch (e) { return ""; }
+    }
+
+    function loadAll() {
+      status("Читаю данные с GitHub…");
+      return loadData(SANDBOX, "author.js", "AUTHOR").then(function (a) { author = a; return loadData(SANDBOX, "poems.js", "POEMS"); })
+        .then(function (p) { poems = p; return loadData(SANDBOX, "audio.js", "AUDIOS"); })
+        .then(function (a) { audios = a; return loadData(SANDBOX, "video.js", "VIDEOS"); })
+        .then(function (v) { videos = v; })
+        .then(function () { renderAll(); });
+    }
+    $("reloadBtn").addEventListener("click", function () {
+      loadAll().then(function () { status("Перечитано с GitHub."); })
+        .catch(function (e) { status("Ошибка: " + e.message, true); });
+    });
+
+    /* ── Общие: селект стихов, жанры ─────────────────────────────── */
+    function poemOptions() {
+      return byDateDesc(poems).map(function (p) {
+        return '<option value="' + esc(p.id) + '">' + esc(p.title || p.id) + "</option>";
       }).join("");
     }
+    function fillPoemSelects() {
+      var html = '<option value="">— нет —</option>' + poemOptions();
+      $("audioForm").poem.innerHTML = html;
+      $("videoForm").poem.innerHTML = html;
+      var g = {};
+      poems.forEach(function (p) { if (p.genre) g[p.genre] = 1; });
+      $("genres").innerHTML = Object.keys(g).sort().map(function (x) {
+        return '<option value="' + esc(x) + '">';
+      }).join("");
+    }
+    function renderAll() {
+      fillPoemSelects();
+      renderPoems();
+      renderAudios();
+      renderVideos();
+      renderAuthor();
+    }
 
-    listEl.addEventListener("click", function (e) {
-      var id = e.target.getAttribute("data-edit");
-      if (id) {
-        var p = poems.filter(function (x) { return x.id === id; })[0];
-        if (!p) return;
-        form.id.value = p.id; form.title.value = p.title;
-        form.genre.value = p.genre || ""; form.date.value = p.date || "";
-        form.text.value = p.text;
-        document.getElementById("saveBtn").textContent = "Сохранить";
-        document.getElementById("resetBtn").hidden = false;
-        window.scrollTo({ top: 0, behavior: "smooth" });
+    /* ── Вкладки ─────────────────────────────────────────────────── */
+    document.querySelector(".atabs").addEventListener("click", function (e) {
+      var b = e.target.closest("[data-tab]");
+      if (!b) return;
+      document.querySelectorAll(".atabs button").forEach(function (x) { x.classList.toggle("active", x === b); });
+      document.querySelectorAll(".atab").forEach(function (x) { x.classList.toggle("active", x.id === "tab-" + b.getAttribute("data-tab")); });
+    });
+
+    /* ── СТИХИ ───────────────────────────────────────────────────── */
+    var poemForm = $("poemForm");
+    function renderPoems() {
+      var q = ($("poemSearch").value || "").toLowerCase();
+      var list = byDateDesc(poems).filter(function (p) {
+        if (!q) return true;
+        return (p.title + " " + p.text).toLowerCase().indexOf(q) !== -1;
+      });
+      $("poemList").innerHTML = list.map(function (p) {
+        return '<li><div class="t"><a href="index.html#poem/' + esc(p.id) + '">' + esc(p.title || "(без названия)") + "</a>" +
+          '<div class="meta">' + esc(p.genre || "без рубрики") + " · " + esc(p.date || "") + " · " + esc(p.id) + "</div></div>" +
+          '<div class="arow" style="margin:0">' +
+          '<button type="button" class="btn ghost small" data-edit="' + esc(p.id) + '">Правка</button>' +
+          '<button type="button" class="btn danger small" data-del="' + esc(p.id) + '">Удалить</button>' +
+          "</div></li>";
+      }).join("") || '<li class="amuted">Ничего не найдено.</li>';
+    }
+    $("poemSearch").addEventListener("input", renderPoems);
+
+    function editPoem(id) {
+      var p = poems.filter(function (x) { return x.id === id; })[0];
+      if (!p) return;
+      poemForm.reset();
+      poemForm.id.value = p.id;
+      poemForm.title.value = p.title || "";
+      poemForm.genre.value = p.genre || "";
+      poemForm.date.value = String(p.date || "").replace(/\s+\d{2}:\d{2}$/, "");
+      poemForm.text.value = p.text || "";
+      $("poemFormTitle").textContent = "Правка: " + (p.title || p.id);
+      $("poemSaveBtn").textContent = "Сохранить";
+      $("poemResetBtn").hidden = false;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    function poemRefs(id) {
+      var out = [];
+      audios.forEach(function (a) { if (a.poem === id) out.push("аудио «" + (a.title || a.id) + "»"); });
+      videos.forEach(function (v) { if (v.poem === id) out.push("видео «" + (v.title || v.id) + "»"); });
+      return out;
+    }
+    poemForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var isNew = !poemForm.id.value;
+      var rec = {
+        id: poemForm.id.value,
+        title: poemForm.title.value.trim(),
+        genre: poemForm.genre.value.trim(),
+        date: normDatePoem(poemForm.date.value),
+        text: poemForm.text.value.replace(/\r\n/g, "\n").trim()
+      };
+      if (!rec.title || !rec.text) { status("Заполните название и текст.", true); return; }
+      if (!rec.id) { // новый стих
+        var d = /^(\d{2})\.(\d{2})\.(\d{4})/.exec(rec.date || "");
+        var ymd = d ? (d[3] + "_" + d[2] + "_" + d[1]) : "";
+        var base = ymd || new Date().toISOString().slice(0, 10).replace(/-/g, "_");
+        var n = 0;
+        do { rec.id = base + "_" + String(Math.floor(1000 + Math.random() * 9000)); }
+        while (poems.some(function (x) { return x.id === rec.id; }) && ++n < 50);
+        poems.unshift(rec);
+      } else {
+        var i = poems.findIndex(function (x) { return x.id === rec.id; });
+        if (i === -1) { status("Стих не найден — перечитайте данные.", true); return; }
+        poems[i] = rec;
+      }
+      status("Сохраняю на GitHub…");      saveDataFile("poems.js", "POEMS", poems,
+        "Админка: " + (isNew ? "добавлен" : "изменён") + " стих «" + rec.title + "»")
+        .then(function () {
+          status((isNew ? "Стих добавлен" : "Стих сохранён") +
+            ". Страницы стихов перегенерируются автоматически (1–2 мин).");
+          resetPoemForm();
+          renderAll();
+        })
+        .catch(function (er) {
+          status("Ошибка сохранения: " + er.message, true);
+          loadAll().catch(function () {});
+        });
+    });
+    function resetPoemForm() {
+      poemForm.reset();
+      poemForm.id.value = "";
+      $("poemFormTitle").textContent = "Новый стих";
+      $("poemSaveBtn").textContent = "Добавить";
+      $("poemResetBtn").hidden = true;
+    }
+    $("poemResetBtn").addEventListener("click", resetPoemForm);
+
+    $("poemList").addEventListener("click", function (e) {
+      var id = e.target.getAttribute && e.target.getAttribute("data-edit");
+      if (id) { editPoem(id); return; }
+      id = e.target.getAttribute && e.target.getAttribute("data-del");
+      if (!id) return;
+      var p = poems.filter(function (x) { return x.id === id; })[0];
+      if (!p) return;
+      var refs = poemRefs(id);
+      if (refs.length) {
+        status("Стих связан с: " + refs.join(", ") +
+          ". Сначала уберите связь в разделах «Аудио»/«Видео».", true);
         return;
       }
-      id = e.target.getAttribute("data-del");
-      if (id && confirm("Удалить стихотворение?")) {
-        poems = poems.filter(function (x) { return x.id !== id; });
-        persist(); render(); msg.textContent = "Удалено (локально).";
-      }
+      if (!confirm('Удалить стих "' + (p.title || id) + '"? Изменение уйдёт на GitHub сразу.')) return;
+      poems = poems.filter(function (x) { return x.id !== id; });
+      status("Удаляю…");
+      saveDataFile("poems.js", "POEMS", poems, "Админка: удалён стих «" + (p.title || id) + "»")
+        .then(function () { status("Стих удалён."); renderAll(); })
+        .catch(function (er) { status("Ошибка удаления: " + er.message, true); loadAll().catch(function () {}); });
     });
 
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      var rec = {
-        id: form.id.value || newId(form.title.value),
-        title: form.title.value.trim(),
-        genre: form.genre.value.trim() || "без рубрики",
-        date: form.date.value.trim(),
-        text: form.text.value.replace(/\r\n/g, "\n").trim()
-      };
-      if (!rec.title || !rec.text) { msg.textContent = "Заполните название и текст."; return; }
-      var i = poems.findIndex(function (x) { return x.id === rec.id; });
-      if (i === -1) { poems.push(rec); msg.textContent = "Добавлено (локально)."; }
-      else { poems[i] = rec; msg.textContent = "Сохранено (локально)."; }
-      persist(); render(); resetForm();
-    });
-
-    function resetForm() {
-      form.reset(); form.id.value = "";
-      document.getElementById("saveBtn").textContent = "Добавить стих";
-      document.getElementById("resetBtn").hidden = true;
+    /* ── Медиа-файлы: загрузка и удаление через API ──────────────── */
+    function readFileInput(input) {
+      var f = input.files && input.files[0];
+      if (!f) return Promise.resolve(null);
+      return new Promise(function (res, rej) {
+        var r = new FileReader();
+        r.onload = function () { res({ name: f.name, bytes: r.result }); };
+        r.onerror = function () { rej(new Error("Не удалось прочитать файл")); };
+        r.readAsArrayBuffer(f);
+      });
     }
-    document.getElementById("resetBtn").addEventListener("click", resetForm);
+    function uploadBinary(path, arrayBuffer, message) {
+      var bytes = new Uint8Array(arrayBuffer), bin = [], CH = 0x8000;
+      for (var i = 0; i < bytes.length; i += CH) {
+        bin.push(String.fromCharCode.apply(null, bytes.subarray(i, i + CH)));
+      }
+      var content = btoa(bin.join(""));
+      return api("GET", "/repos/" + SANDBOX + "/contents/" + path + "?ref=" + BRANCH)
+        .then(function (j) { return j.sha; })
+        .catch(function () { return undefined; }) // файла ещё нет
+        .then(function (sha) {
+          return api("PUT", "/repos/" + SANDBOX + "/contents/" + path, {
+            message: message, content: content, sha: sha, branch: BRANCH
+          });
+        });
+    }
+    function deleteMedia(path, message) {
+      return api("GET", "/repos/" + SANDBOX + "/contents/" + path + "?ref=" + BRANCH)
+        .then(function (j) { return deleteFile(SANDBOX, path, j.sha, message); })
+        .catch(function () { /* нет файла — ок */ });
+    }
 
-    document.getElementById("exportBtn").addEventListener("click", function () {
-      var blob = new Blob(
-        ["window.POEMS = " + JSON.stringify(sorted(), null, 1) + ";\n"],
-        { type: "text/javascript" });
-      var a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "poems.js";
-      a.click();
-      URL.revokeObjectURL(a.href);
-      msg.textContent = "Файл скачан — замените им data/poems.js и опубликуйте.";
+    /* ── АУДИО ───────────────────────────────────────────────────── */
+    var audioForm = $("audioForm");
+    function renderAudios() {
+      $("audioList").innerHTML = byDateDesc(audios).map(function (a) {
+        var p = poems.filter(function (x) { return x.id === a.poem; })[0];
+        return '<li><div class="t"><b>' + esc(a.title || a.id) + "</b>" +
+          '<div class="meta">' + esc(a.date || "") + " · " + esc(a.reader || "") +
+          (p ? " · стих: " + esc(p.title) : "") + " · " + esc(a.id) + "</div></div>" +
+          '<div class="arow" style="margin:0">' +
+          '<button type="button" class="btn ghost small" data-edit="' + esc(a.id) + '">Правка</button>' +
+          '<button type="button" class="btn danger small" data-del="' + esc(a.id) + '">Удалить</button>' +
+          "</div></li>";
+      }).join("") || '<li class="amuted">Пока пусто.</li>';
+    }
+    function editAudio(id) {
+      var a = audios.filter(function (x) { return x.id === id; })[0];
+      if (!a) return;
+      audioForm.reset();
+      audioForm.id.value = a.id;
+      audioForm.title.value = a.title || "";
+      audioForm.date.value = a.date || "";
+      audioForm.reader.value = a.reader || "";
+      audioForm.vk.value = a.vk || "";
+      audioForm.desc.value = a.desc || "";
+      audioForm.poem.value = a.poem || "";
+      $("audioFormTitle").textContent = "Правка: " + (a.title || a.id);
+      audioForm.querySelector('[type="submit"]').textContent = "Сохранить";
+      $("audioResetBtn").hidden = false;
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    function resetAudioForm() {
+      audioForm.reset();
+      audioForm.id.value = "";
+      $("audioFormTitle").textContent = "Новая аудиозапись";
+      audioForm.querySelector('[type="submit"]').textContent = "Добавить";
+      $("audioResetBtn").hidden = true;
+    }
+    $("audioResetBtn").addEventListener("click", resetAudioForm);
+
+    audioForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var isNew = !audioForm.id.value;
+      var id = audioForm.id.value || slugify(audioForm.title.value);
+      if (isNew && audios.some(function (x) { return x.id === id; })) {
+        status("Запись с таким id уже есть: " + id + ". Измените название.", true); return;
+      }
+      var rec = {
+        id: id,
+        title: audioForm.title.value.trim(),
+        reader: audioForm.reader.value.trim() || "читает автор",
+        date: normDate(audioForm.date.value),
+        desc: audioForm.desc.value.trim(),
+        vk: audioForm.vk.value.trim(),
+        src: "https://yakovshakhov.ru/assets/audio/" + id + ".mp3",
+        poem: audioForm.poem.value
+      };
+      status("Сохраняю…");
+      readFileInput(audioForm.file)
+        .then(function (f) {
+          if (f) {
+            status("Загружаю mp3 (" + Math.round(f.bytes.byteLength / 1024) + " КБ)…");
+            return uploadBinary("assets/audio/" + id + ".mp3", f.bytes, "Админка: аудио " + id + ".mp3");
+          }
+          if (isNew) throw new Error("Выберите MP3-файл для новой записи.");
+        })
+        .then(function () {
+          if (isNew) audios.unshift(rec);
+          else {
+            var i = audios.findIndex(function (x) { return x.id === id; });
+            if (i === -1) throw new Error("Запись не найдена — перечитайте данные.");
+            audios[i] = rec;
+          }
+          return saveDataFile("audio.js", "AUDIOS", audios,
+            "Админка: " + (isNew ? "добавлено" : "изменено") + " аудио «" + rec.title + "»");
+        })
+        .then(function () {
+          status("Аудио сохранено. mp3 кладётся в assets/audio/, запись — в data/audio.js.");
+          resetAudioForm();
+          renderAll();
+        })
+        .catch(function (er) { status("Ошибка: " + er.message, true); loadAll().catch(function () {}); });
+    });
+    $("audioList").addEventListener("click", function (e) {
+      var id = e.target.getAttribute && e.target.getAttribute("data-edit");
+      if (id) { editAudio(id); return; }
+      id = e.target.getAttribute && e.target.getAttribute("data-del");
+      if (!id) return;
+      var a = audios.filter(function (x) { return x.id === id; })[0];
+      if (!a) return;
+      if (!confirm('Удалить аудио "' + (a.title || id) + '"? Вместе с ней удалится mp3-файл ' + id + '.mp3.')) return;
+      status("Удаляю…");
+      var chain = true
+        ? deleteMedia("assets/audio/" + id + ".mp3", "Админка: удалено аудио " + id + ".mp3")
+        : Promise.resolve();
+      audios = audios.filter(function (x) { return x.id !== id; });
+      chain.then(function () {
+        return saveDataFile("audio.js", "AUDIOS", audios, "Админка: удалено аудио «" + (a.title || id) + "»");
+      }).then(function () { status("Аудио удалено."); renderAll(); })
+        .catch(function (er) { status("Ошибка удаления: " + er.message, true); loadAll().catch(function () {}); });
     });
 
-    document.getElementById("resetAllBtn").addEventListener("click", function () {
-      if (!confirm("Вернуться к версии из data/poems.js? Локальные правки будут потеряны.")) return;
-      localStorage.removeItem(KEY);
-      poems = load(); render(); resetForm();
-      msg.textContent = "Локальные изменения сброшены.";
+    /* ── ВИДЕО ───────────────────────────────────────────────────── */
+    var videoForm = $("videoForm");
+    function parseVkId(link) {
+      var m = /video(-?\d+)_(\d+)/.exec(String(link || ""));
+      return m ? (m[1] + "_" + m[2]) : "";
+    }
+    function renderVideos() {
+      $("videoList").innerHTML = byDateDesc(videos).map(function (v) {
+        var p = poems.filter(function (x) { return x.id === v.poem; })[0];
+        return '<li><div class="t"><b>' + esc(v.title || v.id) + "</b>" +
+          '<div class="meta">' + esc(v.date || "") + (p ? " · стих: " + esc(p.title) : "") + " · " + esc(v.id) + "</div></div>" +
+          '<div class="arow" style="margin:0">' +
+          '<button type="button" class="btn ghost small" data-edit="' + esc(v.id) + '">Правка</button>' +
+          '<button type="button" class="btn danger small" data-del="' + esc(v.id) + '">Удалить</button>' +
+          "</div></li>";
+      }).join("") || '<li class="amuted">Пока пусто.</li>';
+    }
+    function editVideo(id) {
+      var v = videos.filter(function (x) { return x.id === id; })[0];
+      if (!v) return;
+      videoForm.reset();
+      videoForm.id.value = v.id;
+      videoForm.vk.value = v.vk || "";
+      videoForm.title.value = v.title || "";
+      videoForm.date.value = v.date || "";
+      videoForm.desc.value = v.desc || "";
+      videoForm.poem.value = v.poem || "";
+      $("videoFormTitle").textContent = "Правка: " + (v.title || v.id);
+      videoForm.querySelector('[type="submit"]').textContent = "Сохранить";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    function resetVideoForm() {
+      videoForm.reset();
+      videoForm.id.value = "";
+      $("videoFormTitle").textContent = "Новое видео";
+      videoForm.querySelector('[type="submit"]').textContent = "Добавить";
+    }
+    videoForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var isNew = !videoForm.id.value;
+      var vkLink = videoForm.vk.value.trim();
+      var id = videoForm.id.value || parseVkId(vkLink);
+      if (!id) { status("Не удалось разобрать ссылку VK (нужен вид …/video-123_456).", true); return; }
+      if (isNew && videos.some(function (x) { return x.id === id; })) {
+        status("Видео с таким id уже есть.", true); return;
+      }
+      var rec = {
+        id: id,
+        title: videoForm.title.value.trim(),
+        desc: videoForm.desc.value.trim(),
+        date: normDate(videoForm.date.value),
+        vk: vkLink,
+        cover: videoForm.id.value
+          ? ((videos.filter(function (x) { return x.id === id; })[0] || {}).cover || "")
+          : "",
+        poem: videoForm.poem.value
+      };
+      status("Сохраняю…");
+      readFileInput(videoForm.cover)
+        .then(function (f) {
+          if (f) {
+            var covPath = "assets/video-covers/" + slugify(rec.title) + ".jpg";
+            status("Загружаю обложку…");
+            return uploadBinary(covPath, f.bytes, "Админка: обложка видео «" + rec.title + "»")
+              .then(function () { rec.cover = covPath; });
+          }
+          if (isNew && !rec.cover) throw new Error("Нужна обложка (JPG) для нового видео.");
+        })
+        .then(function () {
+          if (isNew) videos.unshift(rec);
+          else {
+            var i = videos.findIndex(function (x) { return x.id === id; });
+            if (i === -1) throw new Error("Видео не найдено — перечитайте данные.");
+            videos[i] = rec;
+          }
+          return saveDataFile("video.js", "VIDEOS", videos,
+            "Админка: " + (isNew ? "добавлено" : "изменено") + " видео «" + rec.title + "»");
+        })
+        .then(function () { status("Видео сохранено."); resetVideoForm(); renderAll(); })
+        .catch(function (er) { status("Ошибка: " + er.message, true); loadAll().catch(function () {}); });
+    });
+    $("videoList").addEventListener("click", function (e) {
+      var id = e.target.getAttribute && e.target.getAttribute("data-edit");
+      if (id) { editVideo(id); return; }
+      id = e.target.getAttribute && e.target.getAttribute("data-del");
+      if (!id) return;
+      var v = videos.filter(function (x) { return x.id === id; })[0];
+      if (!v) return;
+      if (!confirm('Удалить видео "' + (v.title || id) + '"? Изменение уйдёт на GitHub сразу.')) return;
+      status("Удаляю…");
+      var chain = v.cover ? deleteMedia(v.cover, "Админка: удалена обложка видео «" + (v.title || id) + "»") : Promise.resolve();
+      videos = videos.filter(function (x) { return x.id !== id; });
+      chain.then(function () {
+        return saveDataFile("video.js", "VIDEOS", videos, "Админка: удалено видео «" + (v.title || id) + "»");
+      }).then(function () { status("Видео удалено."); renderAll(); })
+        .catch(function (er) { status("Ошибка удаления: " + er.message, true); loadAll().catch(function () {}); });
     });
 
-    poems = load();
-    var genres = {};
-    poems.forEach(function (p) { if (p.genre) genres[p.genre] = 1; });
-    document.getElementById("genres").innerHTML =
-      Object.keys(genres).sort().map(function (g) { return "<option value='" + esc(g) + "'>"; }).join("");
-    render();
+    /* ── БИОГРАФИЯ ───────────────────────────────────────────────── */
+    function renderAuthor() {
+      var f = $("authorForm");
+      f.name.value = author.name || "";
+      f.bio.value = author.bio || "";
+      f.vk.value = (author.links || {}).vk || "";
+      f.telegram.value = (author.links || {}).telegram || "";
+      f.email.value = (author.links || {}).email || "";
+    }
+    $("authorForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      var f = $("authorForm");
+      var rec = {
+        name: f.name.value.trim(),
+        photo: author.photo || "assets/photo.png",
+        bio: f.bio.value.trim(),
+        links: {
+          vk: f.vk.value.trim(),
+          telegram: f.telegram.value.trim(),
+          email: f.email.value.trim()
+        }
+      };
+      status("Сохраняю…");
+      readFileInput(f.photo)
+        .then(function (file) {
+          if (file) {
+            status("Загружаю фото…");
+            return uploadBinary(rec.photo, file.bytes, "Админка: обновлено фото автора");
+          }
+        })
+        .then(function () {
+          author = rec;
+          return saveDataFile("author.js", "AUTHOR", author, "Админка: обновлены сведения об авторе");
+        })
+        .then(function () { status("Сведения об авторе сохранены."); renderAuthor(); })
+        .catch(function (er) { status("Ошибка: " + er.message, true); loadAll().catch(function () {}); });
+    });
+
+    /* ── В ПРОД ──────────────────────────────────────────────────── */
+    function runUrl(id) { return "https://github.com/" + PROD + "/actions/runs/" + id; }
+    function lastSyncRun() {
+      return api("GET", "/repos/" + PROD + "/actions/workflows/" + SYNC_WORKFLOW + "/runs?per_page=1")
+        .then(function (j) { return (j.workflow_runs || [])[0] || null; });
+    }
+    function pollRun(id, label) {
+      return new Promise(function (res) {
+        var n = 0;
+        (function tick() {
+          api("GET", "/repos/" + PROD + "/actions/runs/" + id).then(function (r) {
+            if (r.status !== "completed") {
+              $("prodStatus").textContent = label + " идёт… (" + (++n) + ")";
+              setTimeout(tick, 10000);
+            } else {
+              res(r.conclusion);
+            }
+          }).catch(function () { setTimeout(tick, 15000); });
+        })();
+      });
+    }
+    $("prodBtn").addEventListener("click", function () {
+      if (!confirm("Перенести всё содержимое песочницы на yakovshakhov.ru?")) return;
+      $("prodBtn").disabled = true;
+      $("prodStatus").textContent = "Запускаю…";
+      lastSyncRun().then(function (r) { return r ? r.id : 0; })
+        .then(function (prevId) {
+          return api("POST", "/repos/" + PROD + "/actions/workflows/" + SYNC_WORKFLOW + "/dispatches", { ref: BRANCH })
+            .then(function () {
+              $("prodStatus").textContent = "Запущено, жду завершения…";
+              function waitNew() {
+                lastSyncRun().then(function (r) {
+                  if (!r || r.id === prevId) { setTimeout(waitNew, 5000); return; }
+                  pollRun(r.id, "Синк").then(function (concl) {
+                    $("prodBtn").disabled = false;
+                    if (concl === "success") {
+                      $("prodStatus").innerHTML = 'Готово ✔ — <a href="' + runUrl(r.id) + '">лог</a>. Прод обновится через 1–2 мин.';
+                    } else {
+                      $("prodStatus").innerHTML = 'Завершено с ошибкой («' + concl + '») — <a href="' + runUrl(r.id) + '">смотрите лог</a>.';
+                    }
+                  });
+                }).catch(function () { setTimeout(waitNew, 5000); });
+              }
+              waitNew();
+            });
+        })
+        .catch(function (e) {
+          $("prodBtn").disabled = false;
+          $("prodStatus").textContent = "Не удалось запустить: " + e.message +
+            " (нужен токен с Actions RW на poetry_site_prod)";
+        });
+    });
+
+    /* ── Старт: автологин по запомненному токену ─────────────────── */
+    var t0 = storedToken();
+    if (t0) { login(t0, true); } else { showAuth(""); }
   })();
   </script>
 </body>
