@@ -41,6 +41,9 @@
     }
     .aform textarea { min-height: 180px; resize: vertical; }
     .aform textarea.small { min-height: 70px; }
+    /* Валидация: подсветка поля и подсказка под ним */
+    .aform .bad { border-color: #c33 !important; }
+    .aform .ferr { color: #c33; font-size: 13px; margin: 4px 0 0; }
     .arow { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
     .alist { list-style: none; margin: 0; padding: 0; max-width: 760px; }
     .alist li {
@@ -123,14 +126,14 @@
           <form id="poemForm">
             <input type="hidden" name="id">
             <label>Название</label>
-            <input type="text" name="title" required>
+            <input type="text" name="title">
             <label>Рубрика</label>
             <input type="text" name="genre" list="genres" placeholder="философская лирика">
             <datalist id="genres"></datalist>
             <label>Дата (ДД.ММ.ГГГГ)</label>
             <input type="text" name="date" placeholder="14.02.2021">
             <label>Текст</label>
-            <textarea name="text" required></textarea>
+            <textarea name="text"></textarea>
             <div class="arow">
               <button type="submit" class="btn" id="poemSaveBtn">Добавить</button>
               <button type="button" class="btn ghost" id="poemResetBtn" hidden>Отменить правку</button>
@@ -154,7 +157,7 @@
           <form id="audioForm">
             <input type="hidden" name="id">
             <label>Название</label>
-            <input type="text" name="title" required>
+            <input type="text" name="title">
             <label>MP3-файл <span class="amuted">(при правке можно оставить прежний)</span></label>
             <input type="file" name="file" accept=".mp3,audio/mpeg">
             <div class="afield2">
@@ -191,10 +194,10 @@
           <form id="videoForm">
             <input type="hidden" name="id">
             <label>Ссылка VK Видео</label>
-            <input type="text" name="vk" placeholder="https://vkvideo.ru/video-101763471_456239055" required>
+            <input type="text" name="vk" placeholder="https://vkvideo.ru/video-101763471_456239055">
             <label>Название</label>
-            <input type="text" name="title" required>
-            <label>Обложка (JPG) <span class="amuted">(при правке можно оставить прежнюю)</span></label>
+            <input type="text" name="title">
+            <label>Обложка (JPG) <span class="amuted">(необязательно; при правке можно оставить прежнюю)</span></label>
             <input type="file" name="cover" accept=".jpg,.jpeg,image/jpeg">
             <div class="afield2">
               <div>
@@ -225,7 +228,7 @@
           <h3>Сведения об авторе</h3>
           <form id="authorForm">
             <label>Имя</label>
-            <input type="text" name="name" required>
+            <input type="text" name="name">
             <label>Короткая строка о себе</label>
             <input type="text" name="bio">
             <label>Фото — файл <span class="amuted">(заменит assets/photo.png)</span></label>
@@ -328,6 +331,50 @@
       setTimeout(function () { btn.classList.remove(cls); }, 1400);
     }
     function saveBtn(form) { return form.querySelector('[type="submit"]'); }
+
+    /* ── Валидация форм ──────────────────────────────────────────── */
+    function validDate(v) {
+      var m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(v || "").trim());
+      if (!m) return false;
+      var d = +m[1], mo = +m[2], y = +m[3];
+      if (mo < 1 || mo > 12 || d < 1 || y < 1500 || y > 3000) return false;
+      var dt = new Date(y, mo - 1, d);
+      return dt.getFullYear() === y && dt.getMonth() === mo - 1 && dt.getDate() === d;
+    }
+    function fieldError(el, msg) {
+      el.classList.add("bad");
+      var h = document.createElement("div");
+      h.className = "ferr";
+      h.textContent = msg;
+      el.insertAdjacentElement("afterend", h);
+    }
+    function clearErrors(form) {
+      form.querySelectorAll(".bad").forEach(function (x) { x.classList.remove("bad"); });
+      form.querySelectorAll(".ferr").forEach(function (x) { x.remove(); });
+    }
+    /* Подсказку под полем убираем, как только пользователь снова печатает */
+    function liveClear(form) {
+      form.addEventListener("input", function (e) {
+        var t = e.target;
+        t.classList.remove("bad");
+        var n = t.nextElementSibling;
+        if (n && n.classList.contains("ferr")) n.remove();
+      });
+    }
+    function failForm(form, btn) {
+      status("Проверьте выделенные поля.", true);
+      flashBtn(btn, false);
+      var el = form.querySelector(".bad");
+      if (el) {
+        if (el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "center" });
+        try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); }
+      }
+    }
+    /* Обязательное поле: true = ошибка */
+    function requireField(el, msg, bad) {
+      if (!String(el.value || "").trim()) { fieldError(el, msg); return true; }
+      return bad;
+    }
 
     /* ── base64 (UTF-8-safe) ─────────────────────────────────────── */
     function b64encode(str) {
@@ -517,6 +564,7 @@
 
     /* ── СТИХИ ───────────────────────────────────────────────────── */
     var poemForm = $("poemForm");
+    liveClear(poemForm);
     function renderPoems() {
       var q = ($("poemSearch").value || "").toLowerCase();
       var list = byDateDesc(poems).filter(function (p) {
@@ -538,11 +586,11 @@
       var p = poems.filter(function (x) { return x.id === id; })[0];
       if (!p) return;
       poemForm.reset();
-      poemForm.id.value = p.id;
-      poemForm.title.value = p.title || "";
-      poemForm.genre.value = p.genre || "";
-      poemForm.date.value = String(p.date || "").replace(/\s+\d{2}:\d{2}$/, "");
-      poemForm.text.value = p.text || "";
+      poemForm.elements.id.value = p.id;
+      poemForm.elements.title.value = p.title || "";
+      poemForm.elements.genre.value = p.genre || "";
+      poemForm.elements.date.value = String(p.date || "").replace(/\s+\d{2}:\d{2}$/, "");
+      poemForm.elements.text.value = p.text || "";
       $("poemFormTitle").textContent = "Правка: " + (p.title || p.id);
       $("poemSaveBtn").textContent = "Сохранить";
       $("poemResetBtn").hidden = false;
@@ -556,15 +604,26 @@
     }
     poemForm.addEventListener("submit", function (e) {
       e.preventDefault();
-      var isNew = !poemForm.id.value;
+      var btn = $("poemSaveBtn");
+      clearErrors(poemForm);
+      var bad = false;
+      bad = requireField(poemForm.elements.title, "Укажите название.", bad);
+      bad = requireField(poemForm.elements.genre, "Укажите рубрику.", bad);
+      if (!validDate(poemForm.elements.date.value)) {
+        fieldError(poemForm.elements.date, "Дата обязательна, формат ДД.ММ.ГГГГ (например, 14.02.2021).");
+        bad = true;
+      }
+      bad = requireField(poemForm.elements.text, "Текст пуст.", bad);
+      if (bad) { failForm(poemForm, btn); return; }
+      var isNew = !poemForm.elements.id.value;
       var rec = {
-        id: poemForm.id.value,
-        title: poemForm.title.value.trim(),
-        genre: poemForm.genre.value.trim(),
-        date: normDatePoem(poemForm.date.value),
-        text: poemForm.text.value.replace(/\r\n/g, "\n").trim()
+        id: poemForm.elements.id.value,
+        title: poemForm.elements.title.value.trim(),
+        genre: poemForm.elements.genre.value.trim(),
+        date: normDatePoem(poemForm.elements.date.value),
+        text: poemForm.elements.text.value.replace(/\r\n/g, "\n").trim()
       };
-      if (!rec.title || !rec.text) { status("Заполните название и текст.", true); return; }
+      if (!rec.title || !rec.text) { status("Заполните название и текст.", true); flashBtn(btn, false); return; }
       if (!rec.id) { // новый стих
         var d = /^(\d{2})\.(\d{2})\.(\d{4})/.exec(rec.date || "");
         var ymd = d ? (d[3] + "_" + d[2] + "_" + d[1]) : "";
@@ -578,7 +637,7 @@
         if (i === -1) { status("Стих не найден — перечитайте данные.", true); return; }
         poems[i] = rec;
       }
-      status("Сохраняю на GitHub…");      var btn = $("poemSaveBtn");
+      status("Сохраняю на GitHub…");
       btn.disabled = true;
       saveDataFile("poems.js", "POEMS", poems,
         "Админка: " + (isNew ? "добавлен" : "изменён") + " стих «" + rec.title + "»")
@@ -601,7 +660,7 @@
     });
     function resetPoemForm() {
       poemForm.reset();
-      poemForm.id.value = "";
+      poemForm.elements.id.value = "";
       $("poemFormTitle").textContent = "Новый стих";
       $("poemSaveBtn").textContent = "Добавить";
       $("poemResetBtn").hidden = true;
@@ -635,7 +694,7 @@
       if (!f) return Promise.resolve(null);
       return new Promise(function (res, rej) {
         var r = new FileReader();
-        r.onload = function () { res({ name: f.name, bytes: r.result }); };
+        r.onload = function () { res({ name: f.elements.name, bytes: r.result }); };
         r.onerror = function () { rej(new Error("Не удалось прочитать файл")); };
         r.readAsArrayBuffer(f);
       });
@@ -663,6 +722,7 @@
 
     /* ── АУДИО ───────────────────────────────────────────────────── */
     var audioForm = $("audioForm");
+    liveClear(audioForm);
     function renderAudios() {
       $("audioList").innerHTML = byDateDesc(audios).map(function (a) {
         var p = poems.filter(function (x) { return x.id === a.poem; })[0];
@@ -679,13 +739,13 @@
       var a = audios.filter(function (x) { return x.id === id; })[0];
       if (!a) return;
       audioForm.reset();
-      audioForm.id.value = a.id;
-      audioForm.title.value = a.title || "";
-      audioForm.date.value = a.date || "";
-      audioForm.reader.value = a.reader || "";
-      audioForm.vk.value = a.vk || "";
-      audioForm.desc.value = a.desc || "";
-      audioForm.poem.value = a.poem || "";
+      audioForm.elements.id.value = a.id;
+      audioForm.elements.title.value = a.title || "";
+      audioForm.elements.date.value = a.date || "";
+      audioForm.elements.reader.value = a.reader || "";
+      audioForm.elements.vk.value = a.vk || "";
+      audioForm.elements.desc.value = a.desc || "";
+      audioForm.elements.poem.value = a.poem || "";
       $("audioFormTitle").textContent = "Правка: " + (a.title || a.id);
       audioForm.querySelector('[type="submit"]').textContent = "Сохранить";
       $("audioResetBtn").hidden = false;
@@ -693,7 +753,7 @@
     }
     function resetAudioForm() {
       audioForm.reset();
-      audioForm.id.value = "";
+      audioForm.elements.id.value = "";
       $("audioFormTitle").textContent = "Новая аудиозапись";
       audioForm.querySelector('[type="submit"]').textContent = "Добавить";
       $("audioResetBtn").hidden = true;
@@ -702,25 +762,37 @@
 
     audioForm.addEventListener("submit", function (e) {
       e.preventDefault();
-      var isNew = !audioForm.id.value;
-      var id = audioForm.id.value || slugify(audioForm.title.value);
+      var btn = saveBtn(audioForm);
+      clearErrors(audioForm);
+      var bad = false;
+      bad = requireField(audioForm.elements.title, "Укажите название.", bad);
+      if (!validDate(audioForm.elements.date.value)) {
+        fieldError(audioForm.elements.date, "Дата обязательна, формат ДД.ММ.ГГГГ (например, 08.10.2016).");
+        bad = true;
+      }
+      if (!audioForm.elements.id.value && !audioForm.elements.file.files.length) {
+        fieldError(audioForm.elements.file, "Для новой записи выберите MP3-файл.");
+        bad = true;
+      }
+      if (bad) { failForm(audioForm, btn); return; }
+      var isNew = !audioForm.elements.id.value;
+      var id = audioForm.elements.id.value || slugify(audioForm.elements.title.value);
       if (isNew && audios.some(function (x) { return x.id === id; })) {
         status("Запись с таким id уже есть: " + id + ". Измените название.", true); return;
       }
       var rec = {
         id: id,
-        title: audioForm.title.value.trim(),
-        reader: audioForm.reader.value.trim() || "читает автор",
-        date: normDate(audioForm.date.value),
-        desc: audioForm.desc.value.trim(),
-        vk: audioForm.vk.value.trim(),
+        title: audioForm.elements.title.value.trim(),
+        reader: audioForm.elements.reader.value.trim() || "читает автор",
+        date: normDate(audioForm.elements.date.value),
+        desc: audioForm.elements.desc.value.trim(),
+        vk: audioForm.elements.vk.value.trim(),
         src: "https://yakovshakhov.ru/assets/audio/" + id + ".mp3",
-        poem: audioForm.poem.value
+        poem: audioForm.elements.poem.value
       };
       status("Сохраняю…");
-      var btn = saveBtn(audioForm);
       btn.disabled = true;
-      readFileInput(audioForm.file)
+      readFileInput(audioForm.elements.file)
         .then(function (f) {
           if (f) {
             status("Загружаю mp3 (" + Math.round(f.bytes.byteLength / 1024) + " КБ)…");
@@ -773,6 +845,7 @@
 
     /* ── ВИДЕО ───────────────────────────────────────────────────── */
     var videoForm = $("videoForm");
+    liveClear(videoForm);
     function parseVkId(link) {
       var m = /video(-?\d+)_(\d+)/.exec(String(link || ""));
       return m ? (m[1] + "_" + m[2]) : "";
@@ -792,46 +865,57 @@
       var v = videos.filter(function (x) { return x.id === id; })[0];
       if (!v) return;
       videoForm.reset();
-      videoForm.id.value = v.id;
-      videoForm.vk.value = v.vk || "";
-      videoForm.title.value = v.title || "";
-      videoForm.date.value = v.date || "";
-      videoForm.desc.value = v.desc || "";
-      videoForm.poem.value = v.poem || "";
+      videoForm.elements.id.value = v.id;
+      videoForm.elements.vk.value = v.vk || "";
+      videoForm.elements.title.value = v.title || "";
+      videoForm.elements.date.value = v.date || "";
+      videoForm.elements.desc.value = v.desc || "";
+      videoForm.elements.poem.value = v.poem || "";
       $("videoFormTitle").textContent = "Правка: " + (v.title || v.id);
       videoForm.querySelector('[type="submit"]').textContent = "Сохранить";
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
     function resetVideoForm() {
       videoForm.reset();
-      videoForm.id.value = "";
+      videoForm.elements.id.value = "";
       $("videoFormTitle").textContent = "Новое видео";
       videoForm.querySelector('[type="submit"]').textContent = "Добавить";
     }
     videoForm.addEventListener("submit", function (e) {
       e.preventDefault();
-      var isNew = !videoForm.id.value;
-      var vkLink = videoForm.vk.value.trim();
-      var id = videoForm.id.value || parseVkId(vkLink);
-      if (!id) { status("Не удалось разобрать ссылку VK (нужен вид …/video-123_456).", true); return; }
+      var btn = saveBtn(videoForm);
+      clearErrors(videoForm);
+      var bad = false;
+      var vkLink = videoForm.elements.vk.value.trim();
+      if (!parseVkId(vkLink)) {
+        fieldError(videoForm.elements.vk, "Укажите ссылку VK Видео (вид …/video-123_456).");
+        bad = true;
+      }
+      bad = requireField(videoForm.elements.title, "Укажите название.", bad);
+      if (!validDate(videoForm.elements.date.value)) {
+        fieldError(videoForm.elements.date, "Дата обязательна, формат ДД.ММ.ГГГГ (например, 08.08.2017).");
+        bad = true;
+      }
+      if (bad) { failForm(videoForm, btn); return; }
+      var isNew = !videoForm.elements.id.value;
+      var id = videoForm.elements.id.value || parseVkId(vkLink);
       if (isNew && videos.some(function (x) { return x.id === id; })) {
         status("Видео с таким id уже есть.", true); return;
       }
       var rec = {
         id: id,
-        title: videoForm.title.value.trim(),
-        desc: videoForm.desc.value.trim(),
-        date: normDate(videoForm.date.value),
+        title: videoForm.elements.title.value.trim(),
+        desc: videoForm.elements.desc.value.trim(),
+        date: normDate(videoForm.elements.date.value),
         vk: vkLink,
-        cover: videoForm.id.value
+        cover: videoForm.elements.id.value
           ? ((videos.filter(function (x) { return x.id === id; })[0] || {}).cover || "")
           : "",
-        poem: videoForm.poem.value
+        poem: videoForm.elements.poem.value
       };
       status("Сохраняю…");
-      var btn = saveBtn(videoForm);
       btn.disabled = true;
-      readFileInput(videoForm.cover)
+      readFileInput(videoForm.elements.cover)
         .then(function (f) {
           if (f) {
             var covPath = "assets/video-covers/" + slugify(rec.title) + ".jpg";
@@ -839,7 +923,6 @@
             return uploadBinary(covPath, f.bytes, "Админка: обложка видео «" + rec.title + "»")
               .then(function () { rec.cover = covPath; });
           }
-          if (isNew && !rec.cover) throw new Error("Нужна обложка (JPG) для нового видео.");
         })
         .then(function () {
           if (isNew) videos.unshift(rec);
@@ -883,31 +966,35 @@
     });
 
     /* ── БИОГРАФИЯ ───────────────────────────────────────────────── */
+    liveClear($("authorForm"));
     function renderAuthor() {
       var f = $("authorForm");
-      f.name.value = author.name || "";
-      f.bio.value = author.bio || "";
-      f.vk.value = (author.links || {}).vk || "";
-      f.telegram.value = (author.links || {}).telegram || "";
-      f.email.value = (author.links || {}).email || "";
+      f.elements.name.value = author.name || "";
+      f.elements.bio.value = author.bio || "";
+      f.elements.vk.value = (author.links || {}).vk || "";
+      f.elements.telegram.value = (author.links || {}).telegram || "";
+      f.elements.email.value = (author.links || {}).email || "";
     }
     $("authorForm").addEventListener("submit", function (e) {
       e.preventDefault();
       var f = $("authorForm");
+      var btn = saveBtn(f);
+      clearErrors(f);
+      if (requireField(f.elements.name, "Укажите имя.", false)) { failForm(f, btn); return; }
       var rec = {
-        name: f.name.value.trim(),
+        name: f.elements.name.value.trim(),
         photo: author.photo || "assets/photo.png",
-        bio: f.bio.value.trim(),
+        bio: f.elements.bio.value.trim(),
         links: {
-          vk: f.vk.value.trim(),
-          telegram: f.telegram.value.trim(),
-          email: f.email.value.trim()
+          vk: f.elements.vk.value.trim(),
+          telegram: f.elements.telegram.value.trim(),
+          email: f.elements.email.value.trim()
         }
       };
       status("Сохраняю…");
       var btn = saveBtn(f);
       btn.disabled = true;
-      readFileInput(f.photo)
+      readFileInput(f.elements.photo)
         .then(function (file) {
           if (file) {
             status("Загружаю фото…");
