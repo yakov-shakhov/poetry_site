@@ -1,5 +1,15 @@
 window.AUDIOS = [
  {
+  "id": "ivanu-buninu",
+  "title": "Ивану Бунину",
+  "reader": "читает автор",
+  "date": "06.06.2021",
+  "desc": "Из клипа \"Прогулка с Иваном Буниным\" (2021 год, Елец-ТВ)",
+  "vk": "",
+  "src": "https://yakovshakhov.ru/assets/audio/ivanu-buninu.mp3",
+  "poem": "2015_11_14_5821"
+ },
+ {
   "id": "vitat-v-oblakah",
   "title": "Витать в облаках",
   "reader": "читает автор",
