@@ -61,7 +61,7 @@ window.AUDIOS = [
  },
  {
   "id": "ya-s-dona-ona-s-volgi",
-  "title": "Я - с Дона, она - с Волги",
+  "title": "Я с Дона, она с Волги",
   "reader": "читает автор",
   "date": "17.09.2016",
   "desc": "",
