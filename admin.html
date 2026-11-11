@@ -44,6 +44,8 @@
     /* Валидация: подсветка поля и подсказка под ним */
     .aform .bad { border-color: #c33 !important; }
     .aform .ferr { color: #c33; font-size: 13px; margin: 4px 0 0; }
+    /* Звёздочка у обязательных полей */
+    .aform label.req::after { content: " *"; color: #c33; font-weight: bold; }
     .arow { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
     .alist { list-style: none; margin: 0; padding: 0; max-width: 760px; }
     .alist li {
@@ -129,14 +131,14 @@
           <h3 id="poemFormTitle">Новый стих</h3>
           <form id="poemForm">
             <input type="hidden" name="id">
-            <label>Название</label>
+            <label class="req">Название</label>
             <input type="text" name="title">
-            <label>Рубрика</label>
+            <label class="req">Рубрика</label>
             <input type="text" name="genre" list="genres" placeholder="философская лирика">
             <datalist id="genres"></datalist>
-            <label>Дата (ДД.ММ.ГГГГ)</label>
+            <label class="req">Дата (ДД.ММ.ГГГГ)</label>
             <input type="text" name="date" placeholder="14.02.2021">
-            <label>Текст</label>
+            <label class="req">Текст</label>
             <textarea name="text"></textarea>
             <div class="arow">
               <button type="submit" class="btn" id="poemSaveBtn">Добавить</button>
@@ -159,13 +161,13 @@
           <h3 id="audioFormTitle">Новая аудиозапись</h3>
           <form id="audioForm">
             <input type="hidden" name="id">
-            <label>Название</label>
+            <label class="req">Название</label>
             <input type="text" name="title">
-            <label>MP3-файл <span class="amuted">(при правке можно оставить прежний)</span></label>
+            <label class="req">MP3-файл <span class="amuted">(обязателен для новой записи; при правке можно оставить прежний)</span></label>
             <input type="file" name="file" accept=".mp3,audio/mpeg">
             <div class="afield2">
               <div>
-                <label>Дата (ДД.ММ.ГГГГ)</label>
+                <label class="req">Дата (ДД.ММ.ГГГГ)</label>
                 <input type="text" name="date" placeholder="14.02.2021">
               </div>
               <div>
@@ -196,15 +198,15 @@
           <h3 id="videoFormTitle">Новое видео</h3>
           <form id="videoForm">
             <input type="hidden" name="id">
-            <label>Ссылка VK Видео</label>
+            <label class="req">Ссылка VK Видео</label>
             <input type="text" name="vk" placeholder="https://vkvideo.ru/video-101763471_456239055">
-            <label>Название</label>
+            <label class="req">Название</label>
             <input type="text" name="title">
             <label>Обложка (JPG) <span class="amuted">(необязательно; при правке можно оставить прежнюю)</span></label>
             <input type="file" name="cover" accept=".jpg,.jpeg,image/jpeg">
             <div class="afield2">
               <div>
-                <label>Дата (ДД.ММ.ГГГГ)</label>
+                <label class="req">Дата (ДД.ММ.ГГГГ)</label>
                 <input type="text" name="date" placeholder="08.08.2017">
               </div>
               <div>
@@ -230,7 +232,7 @@
         <div class="acard aform">
           <h3>Сведения об авторе</h3>
           <form id="authorForm">
-            <label>Имя</label>
+            <label class="req">Имя</label>
             <input type="text" name="name">
             <label>Короткая строка о себе</label>
             <input type="text" name="bio">
