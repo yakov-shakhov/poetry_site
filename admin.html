@@ -608,8 +608,12 @@
     });
 
     /* ── Общие: селект стихов, жанры ─────────────────────────────── */
+    /* В селектах «связанный стих» (аудио/видео) — по алфавиту,
+       чтобы стих было проще найти в списке. */
     function poemOptions() {
-      return byDateDesc(poems).map(function (p) {
+      return poems.slice().sort(function (a, b) {
+        return (a.title || a.id).localeCompare(b.title || b.id, "ru");
+      }).map(function (p) {
         return '<option value="' + esc(p.id) + '">' + esc(p.title || p.id) + "</option>";
       }).join("");
     }
@@ -984,7 +988,16 @@
         curAudioBtn = e.target;
         e.target.textContent = "■";
         e.target.title = "Остановить";
-        curAudio = new Audio("https://yakovshakhov.ru/assets/audio/" + id + ".mp3");
+        /* Свежий mp3 есть в песочнице, старые — только в проде:
+           пробуем песочницу, при ошибке — прод. */
+        curAudio = new Audio("https://yakov-shakhov.github.io/poetry_site/assets/audio/" + id + ".mp3");
+        curAudio.addEventListener("error", function () {
+          if (curAudio && curAudio.src.indexOf("yakovshakhov.ru/") === -1) {
+            curAudio.src = "https://yakovshakhov.ru/assets/audio/" + id + ".mp3";
+            var p = curAudio.play();
+            if (p && p.catch) p.catch(stopAdminAudio);
+          }
+        });
         curAudio.addEventListener("ended", stopAdminAudio);
         curAudio.play().catch(function () {
           stopAdminAudio();

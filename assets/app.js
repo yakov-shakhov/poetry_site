@@ -940,6 +940,7 @@
       var bar = pl.querySelector(".abar");
       var prog = pl.querySelector(".aprog");
       var time = pl.querySelector(".atime");
+      var wantPlay = false; // нажали «слушать» и ждём звук (файл мог ещё не загрузиться)
       function showTime() {
         var d = audio.duration;
         time.textContent = fmtTime(audio.currentTime) + " / " +
@@ -954,14 +955,29 @@
           app.querySelectorAll(".aplayer audio").forEach(function (other) {
             if (other !== audio) other.pause();
           });
+          wantPlay = true;
           audio.play();
           trackGoal("audio_play");
         } else {
+          wantPlay = false;
           audio.pause();
         }
       });
       audio.addEventListener("play", function () { setPlaying(true); });
-      audio.addEventListener("pause", function () { setPlaying(false); });
+      audio.addEventListener("pause", function () { wantPlay = false; setPlaying(false); });
+      /* mp3 лежат в проде (src — абсолютный yakovshakhov.ru), но свежие записи
+         до «В прод» есть только в песочнице: при ошибке пробуем локальный файл. */
+      audio.addEventListener("error", function () {
+        var m = (audio.src || "").match(/^https:\/\/yakovshakhov\.ru\/assets\/audio\/(.+)$/);
+        if (!m || audio.dataset.localFb) return;
+        audio.dataset.localFb = "1";
+        var base = /^\/poetry_site(\/|$)/.test(location.pathname) ? "/poetry_site" : "";
+        audio.src = base + "/assets/audio/" + m[1];
+        if (wantPlay) {
+          var p = audio.play();
+          if (p && p.catch) p.catch(function () {});
+        }
+      });
       audio.addEventListener("ended", function () {
         setPlaying(false);
         audio.currentTime = 0;
