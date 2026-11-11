@@ -881,7 +881,9 @@
             '</div>'
           : '') +
         '<h3>' + esc(a.title) + '</h3>' +
-        (a.reader ? '<p class="areader">' + esc(a.reader) + '</p>' : '') +
+        /* «читает автор» не показываем — все чтения пока авторские;
+           строка появится, если у записи будет другой чтец */
+        (a.reader && a.reader !== "читает автор" ? '<p class="areader">' + esc(a.reader) + '</p>' : '') +
         (a.desc ? '<p class="adesc">' + esc(a.desc) + '</p>' : '') +
         (a.src
           ? '<div class="aplayer" data-poem="' + esc(a.poem || "") + '" data-title="' + esc(a.title) + '">' +

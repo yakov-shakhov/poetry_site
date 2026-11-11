@@ -209,18 +209,12 @@
             <input type="file" name="cover" accept=".jpg,.jpeg,image/jpeg">
             <img id="videoCoverPrev" class="photoprev" alt="Текущая обложка" hidden>
             <div class="amuted" id="videoCurCover" hidden style="margin-top:4px"></div>
-            <div class="afield2">
-              <div>
-                <label class="req">Дата (ДД.ММ.ГГГГ)</label>
-                <input type="text" name="date" placeholder="08.08.2017">
-              </div>
-              <div>
-                <label>Связанный стих</label>
-                <select name="poem"><option value="">— нет —</option></select>
-              </div>
-            </div>
+            <label class="req">Дата (ДД.ММ.ГГГГ)</label>
+            <input type="text" name="date" placeholder="08.08.2017">
             <label>Описание</label>
             <textarea name="desc" class="small"></textarea>
+            <label>Связанный стих</label>
+            <select name="poem"><option value="">— нет —</option></select>
             <div class="arow">
               <button type="submit" class="btn">Добавить</button>
               <button type="button" class="btn ghost" id="videoResetBtn" hidden>Отменить правку</button>
