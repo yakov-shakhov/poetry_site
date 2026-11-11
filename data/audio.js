@@ -1,5 +1,15 @@
 window.AUDIOS = [
  {
+  "id": "novorossiya-prosnis",
+  "title": "Новороссия, проснись",
+  "reader": "читает автор",
+  "date": "01.07.2014",
+  "desc": "запись 2014 года",
+  "vk": "",
+  "src": "https://yakovshakhov.ru/assets/audio/novorossiya-prosnis.mp3",
+  "poem": "2014_06_04_6892"
+ },
+ {
   "id": "ivanu-buninu",
   "title": "Ивану Бунину",
   "reader": "читает автор",
