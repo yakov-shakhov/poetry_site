@@ -1,8 +1,8 @@
 window.POEMS = [
  {
   "id": "2026_11_11_9448",
-  "title": "< new_one >",
-  "genre": "шуточное, ирония, сатира",
+  "title": "< new >",
+  "genre": "новая рубрика",
   "date": "11.11.2026 00:00",
   "text": "< text >\n< text >\n< text >\n< text >\n\n11.11.26\nЕлец"
  },
