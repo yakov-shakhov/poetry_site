@@ -17,7 +17,7 @@ window.AUDIOS = [
   "desc": "Из фильма \"Предчувствие\" (2017)",
   "vk": "",
   "src": "https://yakovshakhov.ru/assets/audio/vitat-v-oblakah.mp3",
-  "poem": "2018_01_15_7790"
+  "poem": "2015_11_26_8067"
  },
  {
   "id": "vershina-snezhnaya",
