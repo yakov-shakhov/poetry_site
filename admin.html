@@ -50,9 +50,11 @@
       display: flex; justify-content: space-between; align-items: center; gap: 12px;
       padding: 10px 4px; border-bottom: 1px solid var(--border, #ddd);
     }
-    .alist .t { min-width: 0; }
+    .alist .t { min-width: 0; flex: 1 1 auto; }
     .alist .t a { color: inherit; }
     .alist .meta { color: var(--muted, #888); font-size: 14px; }
+    .alist .thumb { width: 64px; height: 36px; object-fit: cover; border-radius: 4px; flex: none; background: var(--muted, #888); }
+    .awarn { color: #c33; }
     .amuted { color: var(--muted, #888); }
     .astatus { margin: 10px 0; min-height: 1.4em; }
     .astatus.err { color: #c33; white-space: pre-wrap; }
@@ -115,6 +117,8 @@
         <button type="button" data-tab="video">Видео</button>
         <button type="button" data-tab="author">Биография</button>
         <button type="button" data-tab="prod">В прод</button>
+        <button type="button" class="btn ghost small" id="reloadBtn" style="margin-left:auto"
+                title="Перечитать все данные с GitHub">⟳ Перечитать</button>
       </div>
 
       <div class="astatus" id="status"></div>
@@ -144,7 +148,6 @@
           <div class="arow" style="margin-top:0">
             <input type="text" id="poemSearch" placeholder="Поиск по названию и тексту…"
                    style="flex:1;font:inherit;padding:8px 10px;border:1px solid var(--border,#ccc);border-radius:8px;background:var(--bg,#fff);color:inherit">
-            <button type="button" class="btn ghost small" id="reloadBtn">Перечитать с GitHub</button>
           </div>
           <ul class="alist" id="poemList" style="margin-top:10px"></ul>
         </div>
@@ -250,6 +253,7 @@
       <div class="atab" id="tab-prod">
         <div class="acard">
           <h3>Публикация на yakovshakhov.ru</h3>
+          <p id="prodLast" class="amuted">Последний синк: не проверялся.</p>
           <p>Запускает workflow <code>sync-from-sandbox</code> в прод-репозитории:
             переносит <code>data/</code>, <code>assets/</code>, <code>index.html</code>,
             перегенерирует <code>poem/</code> и sitemap, не трогает <code>robots.txt</code>,
@@ -316,9 +320,18 @@
     function normDate(v) {
       return String(v || "").trim();
     }
-    function status(msg, isErr) {
+    function status(msg, isErr, linkUrl, linkText) {
       var el = $("status");
       el.textContent = msg || "";
+      if (linkUrl) {
+        var a = document.createElement("a");
+        a.href = linkUrl;
+        a.textContent = linkText || linkUrl;
+        a.target = "_blank";
+        a.rel = "noopener";
+        el.appendChild(document.createTextNode(" "));
+        el.appendChild(a);
+      }
       el.className = "astatus" + (isErr ? " err" : "");
     }
     /* Отклик на кнопке: зелёная вспышка (успех) или красная с дрожью (ошибка) */
@@ -352,15 +365,65 @@
       form.querySelectorAll(".bad").forEach(function (x) { x.classList.remove("bad"); });
       form.querySelectorAll(".ferr").forEach(function (x) { x.remove(); });
     }
-    /* Подсказку под полем убираем, как только пользователь снова печатает */
+    /* Подсказку под полем убираем, как только пользователь снова печатает;
+       заодно пишем черновик формы */
     function liveClear(form) {
       form.addEventListener("input", function (e) {
         var t = e.target;
         t.classList.remove("bad");
         var n = t.nextElementSibling;
         if (n && n.classList.contains("ferr")) n.remove();
+        saveDraft(form);
       });
     }
+
+    /* ── Черновики (localStorage) и защита от потери правок ──────── */
+    var DRAFT_PREFIX = "admin_draft_";
+    function fieldValues(form) {
+      var o = {};
+      form.querySelectorAll("[name]").forEach(function (el) {
+        if (el.type === "file") return;
+        o[el.name] = el.value;
+      });
+      return o;
+    }
+    function snapForm(form) { form._snap = JSON.stringify(fieldValues(form)); }
+    function formDirty(form) {
+      if (form._snap === undefined) snapForm(form);
+      return JSON.stringify(fieldValues(form)) !== form._snap;
+    }
+    function saveDraft(form) {
+      try { localStorage.setItem(DRAFT_PREFIX + form.id, JSON.stringify(fieldValues(form))); } catch (e) {}
+    }
+    function clearDraft(form) {
+      try { localStorage.removeItem(DRAFT_PREFIX + form.id); } catch (e) {}
+    }
+    /* Возвращает true, если черновик был и что-то восстановил */
+    function restoreDraft(form) {
+      var raw = null;
+      try { raw = localStorage.getItem(DRAFT_PREFIX + form.id); } catch (e) {}
+      if (!raw) return false;
+      var vals;
+      try { vals = JSON.parse(raw); } catch (e) { return false; }
+      var any = false;
+      Object.keys(vals).forEach(function (k) {
+        if (!vals[k]) return;
+        var el = form.elements.namedItem(k);
+        if (el && el.type !== "file") { el.value = vals[k]; any = true; }
+      });
+      return any;
+    }
+    /* Спросить, если форма изменена. true = можно продолжать */
+    function guardFormDirty(form) {
+      return !formDirty(form) ||
+        confirm("В форме есть несохранённые изменения — при продолжении они будут потеряны. Продолжить?");
+    }
+    window.addEventListener("beforeunload", function (e) {
+      var dirty = ["poemForm", "audioForm", "videoForm", "authorForm"].some(function (id) {
+        return formDirty($(id));
+      });
+      if (dirty) { e.preventDefault(); e.returnValue = ""; }
+    });
     function failForm(form, btn) {
       status("Проверьте выделенные поля.", true);
       flashBtn(btn, false);
@@ -489,7 +552,9 @@
           $("auth").hidden = true;
           return loadAll().then(function () {
             $("app").hidden = false;
-            status("Загружено с GitHub: стихов " + poems.length + ", аудио " + audios.length + ", видео " + videos.length + ".");
+            var drafts = restoreFormDrafts();
+            status("Загружено с GitHub: стихов " + poems.length + ", аудио " + audios.length + ", видео " + videos.length + "." +
+              (drafts.length ? " Восстановлены черновики: " + drafts.join(", ") + "." : ""));
           });
         })
         .catch(function (e) {
@@ -525,8 +590,12 @@
         .then(function () { renderAll(); });
     }
     $("reloadBtn").addEventListener("click", function () {
+      var btn = $("reloadBtn");
+      btn.disabled = true;
+      btn.textContent = "Читаю…";
       loadAll().then(function () { status("Перечитано с GitHub."); })
-        .catch(function (e) { status("Ошибка: " + e.message, true); });
+        .catch(function (e) { status("Ошибка: " + e.message, true); })
+        .then(function () { btn.disabled = false; btn.textContent = "⟳ Перечитать"; });
     });
 
     /* ── Общие: селект стихов, жанры ─────────────────────────────── */
@@ -537,8 +606,8 @@
     }
     function fillPoemSelects() {
       var html = '<option value="">— нет —</option>' + poemOptions();
-      $("audioForm").poem.innerHTML = html;
-      $("videoForm").poem.innerHTML = html;
+      $("audioForm").elements.poem.innerHTML = html;
+      $("videoForm").elements.poem.innerHTML = html;
       var g = {};
       poems.forEach(function (p) { if (p.genre) g[p.genre] = 1; });
       $("genres").innerHTML = Object.keys(g).sort().map(function (x) {
@@ -550,37 +619,56 @@
       renderPoems();
       renderAudios();
       renderVideos();
-      renderAuthor();
+      // Форму автора не затираем, если в ней есть несохранённые правки
+      if (!formDirty($("authorForm"))) renderAuthor();
     }
 
     /* ── Вкладки ─────────────────────────────────────────────────── */
     document.querySelector(".atabs").addEventListener("click", function (e) {
       var b = e.target.closest("[data-tab]");
       if (!b) return;
+      var activeTab = document.querySelector(".atab.active");
+      if (activeTab) {
+        var f = activeTab.querySelector("form");
+        if (f && !guardFormDirty(f)) return; // «грязную» форму не бросаем без спроса
+      }
       status(""); // при смене таба старое сообщение неактуально
       document.querySelectorAll(".atabs button").forEach(function (x) { x.classList.toggle("active", x === b); });
       document.querySelectorAll(".atab").forEach(function (x) { x.classList.toggle("active", x.id === "tab-" + b.getAttribute("data-tab")); });
+      if (b.getAttribute("data-tab") === "prod") refreshProdLast();
     });
 
     /* ── СТИХИ ───────────────────────────────────────────────────── */
     var poemForm = $("poemForm");
     liveClear(poemForm);
+    var POEM_PAGE = 50;
+    var poemLimit = POEM_PAGE;
     function renderPoems() {
       var q = ($("poemSearch").value || "").toLowerCase();
       var list = byDateDesc(poems).filter(function (p) {
         if (!q) return true;
         return (p.title + " " + p.text).toLowerCase().indexOf(q) !== -1;
       });
-      $("poemList").innerHTML = list.map(function (p) {
+      var shown = list.slice(0, poemLimit);
+      var html = shown.map(function (p) {
         return '<li><div class="t"><a href="index.html#poem/' + esc(p.id) + '">' + esc(p.title || "(без названия)") + "</a>" +
           '<div class="meta">' + esc(p.genre || "без рубрики") + " · " + esc(p.date || "") + " · " + esc(p.id) + "</div></div>" +
           '<div class="arow" style="margin:0">' +
           '<button type="button" class="btn ghost small" data-edit="' + esc(p.id) + '">Правка</button>' +
           '<button type="button" class="btn danger small" data-del="' + esc(p.id) + '">Удалить</button>' +
           "</div></li>";
-      }).join("") || '<li class="amuted">Ничего не найдено.</li>';
+      }).join("");
+      if (list.length > shown.length) {
+        html += '<li style="justify-content:center"><button type="button" class="btn ghost small" data-more="1">' +
+          "Показать ещё " + Math.min(POEM_PAGE, list.length - shown.length) +
+          " (показано " + shown.length + " из " + list.length + ")</button></li>";
+      }
+      $("poemList").innerHTML = html || '<li class="amuted">Ничего не найдено.</li>';
     }
-    $("poemSearch").addEventListener("input", renderPoems);
+    $("poemSearch").addEventListener("input", function () {
+      poemLimit = POEM_PAGE;
+      renderPoems();
+    });
 
     function editPoem(id) {
       var p = poems.filter(function (x) { return x.id === id; })[0];
@@ -594,6 +682,8 @@
       $("poemFormTitle").textContent = "Правка: " + (p.title || p.id);
       $("poemSaveBtn").textContent = "Сохранить";
       $("poemResetBtn").hidden = false;
+      snapForm(poemForm);
+      saveDraft(poemForm);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
     function poemRefs(id) {
@@ -643,7 +733,10 @@
         "Админка: " + (isNew ? "добавлен" : "изменён") + " стих «" + rec.title + "»")
         .then(function () {
           status((isNew ? "Стих добавлен" : "Стих сохранён") +
-            ". Страницы стихов перегенерируются автоматически (1–2 мин).");
+            ". Страница на песочнице появится через 1–2 мин:",
+            false,
+            "https://yakov-shakhov.github.io/poetry_site/poem/" + rec.id + ".html",
+            "poem/" + rec.id + ".html");
           resetPoemForm();
           renderAll();
           flashBtn(btn, true);
@@ -664,12 +757,21 @@
       $("poemFormTitle").textContent = "Новый стих";
       $("poemSaveBtn").textContent = "Добавить";
       $("poemResetBtn").hidden = true;
+      clearDraft(poemForm);
+      snapForm(poemForm);
     }
-    $("poemResetBtn").addEventListener("click", resetPoemForm);
+    $("poemResetBtn").addEventListener("click", function () {
+      if (guardFormDirty(poemForm)) resetPoemForm();
+    });
 
     $("poemList").addEventListener("click", function (e) {
+      if (e.target.getAttribute && e.target.getAttribute("data-more")) {
+        poemLimit += POEM_PAGE;
+        renderPoems();
+        return;
+      }
       var id = e.target.getAttribute && e.target.getAttribute("data-edit");
-      if (id) { editPoem(id); return; }
+      if (id) { if (guardFormDirty(poemForm)) editPoem(id); return; }
       id = e.target.getAttribute && e.target.getAttribute("data-del");
       if (!id) return;
       var p = poems.filter(function (x) { return x.id === id; })[0];
@@ -694,7 +796,7 @@
       if (!f) return Promise.resolve(null);
       return new Promise(function (res, rej) {
         var r = new FileReader();
-        r.onload = function () { res({ name: f.elements.name, bytes: r.result }); };
+        r.onload = function () { res({ name: f.name, bytes: r.result }); };
         r.onerror = function () { rej(new Error("Не удалось прочитать файл")); };
         r.readAsArrayBuffer(f);
       });
@@ -723,6 +825,14 @@
     /* ── АУДИО ───────────────────────────────────────────────────── */
     var audioForm = $("audioForm");
     liveClear(audioForm);
+    /* Плеер для прослушивания mp3 прямо из списка */
+    var curAudio = null, curAudioBtn = null;
+    function stopAdminAudio() {
+      if (curAudio) { try { curAudio.pause(); } catch (e) {} }
+      if (curAudioBtn) { curAudioBtn.textContent = "▶"; curAudioBtn.title = "Прослушать"; }
+      curAudio = null;
+      curAudioBtn = null;
+    }
     function renderAudios() {
       $("audioList").innerHTML = byDateDesc(audios).map(function (a) {
         var p = poems.filter(function (x) { return x.id === a.poem; })[0];
@@ -730,6 +840,7 @@
           '<div class="meta">' + esc(a.date || "") + " · " + esc(a.reader || "") +
           (p ? " · стих: " + esc(p.title) : "") + " · " + esc(a.id) + "</div></div>" +
           '<div class="arow" style="margin:0">' +
+          '<button type="button" class="btn ghost small" data-play="' + esc(a.id) + '" title="Прослушать mp3">▶</button>' +
           '<button type="button" class="btn ghost small" data-edit="' + esc(a.id) + '">Правка</button>' +
           '<button type="button" class="btn danger small" data-del="' + esc(a.id) + '">Удалить</button>' +
           "</div></li>";
@@ -749,6 +860,8 @@
       $("audioFormTitle").textContent = "Правка: " + (a.title || a.id);
       audioForm.querySelector('[type="submit"]').textContent = "Сохранить";
       $("audioResetBtn").hidden = false;
+      snapForm(audioForm);
+      saveDraft(audioForm);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
     function resetAudioForm() {
@@ -757,8 +870,12 @@
       $("audioFormTitle").textContent = "Новая аудиозапись";
       audioForm.querySelector('[type="submit"]').textContent = "Добавить";
       $("audioResetBtn").hidden = true;
+      clearDraft(audioForm);
+      snapForm(audioForm);
     }
-    $("audioResetBtn").addEventListener("click", resetAudioForm);
+    $("audioResetBtn").addEventListener("click", function () {
+      if (guardFormDirty(audioForm)) resetAudioForm();
+    });
 
     audioForm.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -811,7 +928,10 @@
             "Админка: " + (isNew ? "добавлено" : "изменено") + " аудио «" + rec.title + "»");
         })
         .then(function () {
-          status("Аудио сохранено. mp3 кладётся в assets/audio/, запись — в data/audio.js.");
+          status("Аудио сохранено. Раздел на песочнице обновится через 1–2 мин:",
+            false,
+            "https://yakov-shakhov.github.io/poetry_site/index.html#audio",
+            "раздел «Аудио»");
           resetAudioForm();
           renderAll();
           flashBtn(btn, true);
@@ -825,8 +945,24 @@
         .then(function () { btn.disabled = false; });
     });
     $("audioList").addEventListener("click", function (e) {
-      var id = e.target.getAttribute && e.target.getAttribute("data-edit");
-      if (id) { editAudio(id); return; }
+      var id = e.target.getAttribute && e.target.getAttribute("data-play");
+      if (id) {
+        if (curAudioBtn === e.target) { stopAdminAudio(); return; }
+        stopAdminAudio();
+        if (!window.Audio) { status("Прослушивание недоступно в этом браузере.", true); return; }
+        curAudioBtn = e.target;
+        e.target.textContent = "■";
+        e.target.title = "Остановить";
+        curAudio = new Audio("https://yakovshakhov.ru/assets/audio/" + id + ".mp3");
+        curAudio.addEventListener("ended", stopAdminAudio);
+        curAudio.play().catch(function () {
+          stopAdminAudio();
+          status("Не удалось воспроизвести " + id + ".mp3.", true);
+        });
+        return;
+      }
+      id = e.target.getAttribute && e.target.getAttribute("data-edit");
+      if (id) { if (guardFormDirty(audioForm)) editAudio(id); return; }
       id = e.target.getAttribute && e.target.getAttribute("data-del");
       if (!id) return;
       var a = audios.filter(function (x) { return x.id === id; })[0];
@@ -853,7 +989,9 @@
     function renderVideos() {
       $("videoList").innerHTML = byDateDesc(videos).map(function (v) {
         var p = poems.filter(function (x) { return x.id === v.poem; })[0];
-        return '<li><div class="t"><b>' + esc(v.title || v.id) + "</b>" +
+        return "<li>" +
+          (v.cover ? '<img class="thumb" src="' + esc(v.cover) + '" alt="" loading="lazy">' : "") +
+          '<div class="t"><b>' + esc(v.title || v.id) + "</b>" +
           '<div class="meta">' + esc(v.date || "") + (p ? " · стих: " + esc(p.title) : "") + " · " + esc(v.id) + "</div></div>" +
           '<div class="arow" style="margin:0">' +
           '<button type="button" class="btn ghost small" data-edit="' + esc(v.id) + '">Правка</button>' +
@@ -873,6 +1011,8 @@
       videoForm.elements.poem.value = v.poem || "";
       $("videoFormTitle").textContent = "Правка: " + (v.title || v.id);
       videoForm.querySelector('[type="submit"]').textContent = "Сохранить";
+      snapForm(videoForm);
+      saveDraft(videoForm);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
     function resetVideoForm() {
@@ -880,6 +1020,8 @@
       videoForm.elements.id.value = "";
       $("videoFormTitle").textContent = "Новое видео";
       videoForm.querySelector('[type="submit"]').textContent = "Добавить";
+      clearDraft(videoForm);
+      snapForm(videoForm);
     }
     videoForm.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -935,7 +1077,10 @@
             "Админка: " + (isNew ? "добавлено" : "изменено") + " видео «" + rec.title + "»");
         })
         .then(function () {
-          status("Видео сохранено.");
+          status("Видео сохранено. Раздел на песочнице обновится через 1–2 мин:",
+            false,
+            "https://yakov-shakhov.github.io/poetry_site/index.html#video",
+            "раздел «Видео»");
           resetVideoForm();
           renderAll();
           flashBtn(btn, true);
@@ -950,7 +1095,7 @@
     });
     $("videoList").addEventListener("click", function (e) {
       var id = e.target.getAttribute && e.target.getAttribute("data-edit");
-      if (id) { editVideo(id); return; }
+      if (id) { if (guardFormDirty(videoForm)) editVideo(id); return; }
       id = e.target.getAttribute && e.target.getAttribute("data-del");
       if (!id) return;
       var v = videos.filter(function (x) { return x.id === id; })[0];
@@ -974,6 +1119,7 @@
       f.elements.vk.value = (author.links || {}).vk || "";
       f.elements.telegram.value = (author.links || {}).telegram || "";
       f.elements.email.value = (author.links || {}).email || "";
+      snapForm(f);
     }
     $("authorForm").addEventListener("submit", function (e) {
       e.preventDefault();
@@ -992,7 +1138,6 @@
         }
       };
       status("Сохраняю…");
-      var btn = saveBtn(f);
       btn.disabled = true;
       readFileInput(f.elements.photo)
         .then(function (file) {
@@ -1008,6 +1153,7 @@
         .then(function () {
           status("Сведения об авторе сохранены.");
           renderAuthor();
+          clearDraft(f);
           flashBtn(btn, true);
           window.scrollTo({ top: 0, behavior: "smooth" });
         })
@@ -1021,6 +1167,49 @@
 
     /* ── В ПРОД ──────────────────────────────────────────────────── */
     function runUrl(id) { return "https://github.com/" + PROD + "/actions/runs/" + id; }
+    function fmtWhen(iso) {
+      var d = new Date(iso);
+      if (isNaN(d.getTime())) return String(iso || "");
+      var now = new Date();
+      var midnight = function (x) { return new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime(); };
+      var diffDays = Math.round((midnight(now) - midnight(d)) / 86400000);
+      var hm = ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
+      if (diffDays === 0) return "сегодня в " + hm;
+      if (diffDays === 1) return "вчера в " + hm;
+      return ("0" + d.getDate()).slice(-2) + "." + ("0" + (d.getMonth() + 1)).slice(-2) + "." + d.getFullYear() + " в " + hm;
+    }
+    function refreshProdLast() {
+      var el = $("prodLast");
+      el.textContent = "Проверяю последний синк…";
+      el.className = "amuted";
+      lastSyncRun().then(function (r) {
+        el.textContent = "";
+        var a = document.createElement("a");
+        a.target = "_blank";
+        a.rel = "noopener";
+        if (!r) {
+          el.textContent = "Синков ещё не было.";
+          return;
+        }
+        var link = "лог";
+        a.href = runUrl(r.id);
+        a.textContent = link;
+        if (r.status !== "completed") {
+          el.appendChild(document.createTextNode("Последний синк идёт сейчас (" + fmtWhen(r.created_at) + ") — "));
+          el.appendChild(a);
+        } else if (r.conclusion === "success") {
+          el.appendChild(document.createTextNode("Последний синк: успешно, " + fmtWhen(r.updated_at) + " — "));
+          el.appendChild(a);
+        } else {
+          el.className = "amuted awarn";
+          el.appendChild(document.createTextNode("Последний синк: ошибка («" + r.conclusion + "»), " + fmtWhen(r.updated_at) + " — "));
+          el.appendChild(a);
+        }
+      }).catch(function (e) {
+        el.textContent = "Не удалось узнать статус последнего синка: " + e.message;
+        el.className = "amuted awarn";
+      });
+    }
     function lastSyncRun() {
       return api("GET", "/repos/" + PROD + "/actions/workflows/" + SYNC_WORKFLOW + "/runs?per_page=1")
         .then(function (j) { return (j.workflow_runs || [])[0] || null; });
@@ -1061,6 +1250,7 @@
                       flashBtn($("prodBtn"), false);
                       status("Синк завершился с ошибкой («" + concl + "»). Лог: " + runUrl(r.id), true);
                     }
+                    refreshProdLast();
                   });
                 }).catch(function () { setTimeout(waitNew, 5000); });
               }
@@ -1073,6 +1263,80 @@
           status("Не удалось запустить: " + e.message +
             " (нужен токен с Actions RW на poetry_site_prod)", true);
         });
+    });
+
+    /* ── Восстановление черновиков при входе ─────────────────────── */
+    function restorePoemDraft() {
+      var ok = restoreDraft(poemForm);
+      if (ok) {
+        var t = poemForm.elements.title.value;
+        $("poemFormTitle").textContent = poemForm.elements.id.value
+          ? "Правка (восстановлено): " + t
+          : "Черновик: " + t;
+        $("poemSaveBtn").textContent = poemForm.elements.id.value ? "Сохранить" : "Добавить";
+        $("poemResetBtn").hidden = false;
+      }
+      snapForm(poemForm);
+      return ok;
+    }
+    function restoreAudioDraft() {
+      var ok = restoreDraft(audioForm);
+      if (ok) {
+        var t = audioForm.elements.title.value;
+        $("audioFormTitle").textContent = audioForm.elements.id.value
+          ? "Правка (восстановлено): " + t
+          : "Черновик: " + t;
+        audioForm.querySelector('[type="submit"]').textContent = audioForm.elements.id.value ? "Сохранить" : "Добавить";
+        $("audioResetBtn").hidden = false;
+      }
+      snapForm(audioForm);
+      return ok;
+    }
+    function restoreVideoDraft() {
+      var ok = restoreDraft(videoForm);
+      if (ok) {
+        var t = videoForm.elements.title.value;
+        $("videoFormTitle").textContent = videoForm.elements.id.value
+          ? "Правка (восстановлено): " + t
+          : "Черновик: " + t;
+        videoForm.querySelector('[type="submit"]').textContent = videoForm.elements.id.value ? "Сохранить" : "Добавить";
+      }
+      snapForm(videoForm);
+      return ok;
+    }
+    function restoreFormDrafts() {
+      var names = [];
+      if (restorePoemDraft()) names.push("стихи");
+      if (restoreAudioDraft()) names.push("аудио");
+      if (restoreVideoDraft()) names.push("видео");
+      var af = $("authorForm");
+      if (restoreDraft(af)) names.push("биография");
+      snapForm(af);
+      return names;
+    }
+
+    /* ── Горячие клавиши: Ctrl/Cmd+S — сохранить, Esc — отменить правку ── */
+    document.addEventListener("keydown", function (e) {
+      if ((e.ctrlKey || e.metaKey) && e.code === "KeyS") {
+        if ($("app").hidden) return;
+        var f = document.querySelector(".atab.active form");
+        if (f) {
+          e.preventDefault();
+          if (f.requestSubmit) f.requestSubmit();
+          else f.dispatchEvent(new Event("submit", { cancelable: true }));
+        }
+      } else if (e.key === "Escape") {
+        if ($("app").hidden) return;
+        var tab = document.querySelector(".atab.active");
+        var f2 = tab && tab.querySelector("form");
+        if (!f2 || !formDirty(f2)) return;
+        if (confirm("Отменить правку? Несохранённые изменения будут потеряны.")) {
+          if (f2.id === "poemForm") resetPoemForm();
+          else if (f2.id === "audioForm") resetAudioForm();
+          else if (f2.id === "videoForm") resetVideoForm();
+          else if (f2.id === "authorForm") renderAuthor();
+        }
+      }
     });
 
     /* ── Старт: автологин по запомненному токену ─────────────────── */
