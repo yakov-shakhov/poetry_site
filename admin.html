@@ -46,6 +46,8 @@
     .aform .ferr { color: #c33; font-size: 13px; margin: 4px 0 0; }
     /* Звёздочка у обязательных полей */
     .aform label.req::after { content: " *"; color: #c33; font-weight: bold; }
+    /* Превью текущих медиа-файлов в формах */
+    .aform .photoprev { display: block; width: 140px; height: 140px; object-fit: cover; border-radius: 8px; margin-top: 8px; }
     .arow { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 14px; }
     .alist { list-style: none; margin: 0; padding: 0; max-width: 760px; }
     .alist li {
@@ -165,6 +167,7 @@
             <input type="text" name="title">
             <label class="req">MP3-файл <span class="amuted">(обязателен для новой записи; при правке можно оставить прежний)</span></label>
             <input type="file" name="file" accept=".mp3,audio/mpeg">
+            <div class="amuted" id="audioCurFile" hidden style="margin-top:4px"></div>
             <div class="afield2">
               <div>
                 <label class="req">Дата (ДД.ММ.ГГГГ)</label>
@@ -204,6 +207,8 @@
             <input type="text" name="title">
             <label>Обложка (JPG) <span class="amuted">(необязательно; при правке можно оставить прежнюю)</span></label>
             <input type="file" name="cover" accept=".jpg,.jpeg,image/jpeg">
+            <img id="videoCoverPrev" class="photoprev" alt="Текущая обложка" hidden>
+            <div class="amuted" id="videoCurCover" hidden style="margin-top:4px"></div>
             <div class="afield2">
               <div>
                 <label class="req">Дата (ДД.ММ.ГГГГ)</label>
@@ -236,8 +241,10 @@
             <input type="text" name="name">
             <label>Короткая строка о себе</label>
             <input type="text" name="bio">
-            <label>Фото — файл <span class="amuted">(заменит assets/photo.png)</span></label>
+            <label>Фото — файл <span class="amuted">(необязательно; заменит текущее)</span></label>
             <input type="file" name="photo" accept=".png,image/png">
+            <img id="authorPhotoPrev" class="photoprev" alt="Текущее фото автора" hidden>
+            <div class="amuted" id="authorPhotoCap" hidden style="margin-top:4px"></div>
             <label>Ссылка VK</label>
             <input type="text" name="vk">
             <label>Ссылка Telegram</label>
@@ -862,6 +869,7 @@
       $("audioFormTitle").textContent = "Правка: " + (a.title || a.id);
       audioForm.querySelector('[type="submit"]').textContent = "Сохранить";
       $("audioResetBtn").hidden = false;
+      showAudioCurFile(a.src ? a.src.split("/").pop() : "");
       snapForm(audioForm);
       saveDraft(audioForm);
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -872,11 +880,32 @@
       $("audioFormTitle").textContent = "Новая аудиозапись";
       audioForm.querySelector('[type="submit"]').textContent = "Добавить";
       $("audioResetBtn").hidden = true;
+      $("audioCurFile").hidden = true;
       clearDraft(audioForm);
       snapForm(audioForm);
     }
     $("audioResetBtn").addEventListener("click", function () {
       if (guardFormDirty(audioForm)) resetAudioForm();
+    });
+    /* Подсказка «какой mp3 сейчас играет у этой записи» при правке */
+    function showAudioCurFile(fileName) {
+      var el = $("audioCurFile");
+      if (!fileName) { el.hidden = true; return; }
+      el.textContent = "Текущий файл: " + fileName + " — останется, если не выбрать новый.";
+      el.hidden = false;
+    }
+    audioForm.elements.file.addEventListener("change", function () {
+      var file = this.files && this.files[0];
+      if (file) {
+        var cur = $("audioCurFile");
+        cur.textContent = "Новый файл: " + file.name + " — заменит текущий при сохранении (" +
+          Math.round(file.size / 1024) + " КБ).";
+        cur.hidden = false;
+      } else if (audioForm.elements.id.value) {
+        showAudioCurFile(audioForm.elements.id.value + ".mp3");
+      } else {
+        $("audioCurFile").hidden = true;
+      }
     });
 
     audioForm.addEventListener("submit", function (e) {
@@ -1013,6 +1042,7 @@
       videoForm.elements.poem.value = v.poem || "";
       $("videoFormTitle").textContent = "Правка: " + (v.title || v.id);
       videoForm.querySelector('[type="submit"]').textContent = "Сохранить";
+      showVideoCover(v.cover);
       snapForm(videoForm);
       saveDraft(videoForm);
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1022,9 +1052,29 @@
       videoForm.elements.id.value = "";
       $("videoFormTitle").textContent = "Новое видео";
       videoForm.querySelector('[type="submit"]').textContent = "Добавить";
+      $("videoCoverPrev").hidden = true;
+      $("videoCurCover").hidden = true;
       clearDraft(videoForm);
       snapForm(videoForm);
     }
+    /* Превью обложки: путь текущей или выбранный файл */
+    function showVideoCover(src, caption) {
+      var prev = $("videoCoverPrev"), cap = $("videoCurCover");
+      if (!src) { prev.hidden = true; cap.hidden = true; return; }
+      prev.src = src;
+      prev.hidden = false;
+      cap.textContent = caption || ("Текущая обложка: " + src.split("/").pop() + " — останется, если не выбрать новую.");
+      cap.hidden = false;
+    }
+    videoForm.elements.cover.addEventListener("change", function () {
+      var file = this.files && this.files[0];
+      if (!file) { showVideoCover(""); return; }
+      var r = new FileReader();
+      r.onload = function () {
+        showVideoCover(r.result, "Новый файл: " + file.name + " — заменит текущую обложку при сохранении.");
+      };
+      r.readAsDataURL(file);
+    });
     videoForm.addEventListener("submit", function (e) {
       e.preventDefault();
       var btn = saveBtn(videoForm);
@@ -1046,15 +1096,14 @@
       if (isNew && videos.some(function (x) { return x.id === id; })) {
         status("Видео с таким id уже есть.", true); return;
       }
+      var oldRec = isNew ? null : (videos.filter(function (x) { return x.id === id; })[0] || null);
       var rec = {
         id: id,
         title: videoForm.elements.title.value.trim(),
         desc: videoForm.elements.desc.value.trim(),
         date: normDate(videoForm.elements.date.value),
         vk: vkLink,
-        cover: videoForm.elements.id.value
-          ? ((videos.filter(function (x) { return x.id === id; })[0] || {}).cover || "")
-          : "",
+        cover: oldRec ? (oldRec.cover || "") : "",
         poem: videoForm.elements.poem.value
       };
       status("Сохраняю…");
@@ -1065,7 +1114,16 @@
             var covPath = "assets/video-covers/" + slugify(rec.title) + ".jpg";
             status("Загружаю обложку…");
             return uploadBinary(covPath, f.bytes, "Админка: обложка видео «" + rec.title + "»")
-              .then(function () { rec.cover = covPath; });
+              .then(function () { rec.cover = covPath; })
+              .then(function () {
+                // Старая обложка не нужна, если путь сменился (переименование)
+                // и на неё не ссылается другое видео
+                if (oldRec && oldRec.cover && oldRec.cover !== rec.cover &&
+                    !videos.some(function (x) { return x.id !== id && x.cover === oldRec.cover; })) {
+                  return deleteMedia(oldRec.cover, "Админка: прежняя обложка видео «" + rec.title + "» заменена")
+                    .catch(function () {}); // нет файла — не страшно
+                }
+              });
           }
         })
         .then(function () {
@@ -1121,8 +1179,26 @@
       f.elements.vk.value = (author.links || {}).vk || "";
       f.elements.telegram.value = (author.links || {}).telegram || "";
       f.elements.email.value = (author.links || {}).email || "";
+      showAuthorPhoto(author.photo || "assets/photo.png", "Текущее фото — останется, если не выбрать новое.");
       snapForm(f);
     }
+    /* Превью фото автора: путь текущий или выбранный файл */
+    function showAuthorPhoto(src, caption) {
+      $("authorPhotoPrev").src = src;
+      $("authorPhotoPrev").hidden = false;
+      $("authorPhotoCap").textContent = caption || "";
+      $("authorPhotoCap").hidden = false;
+    }
+    $("authorForm").elements.photo.addEventListener("change", function () {
+      var file = this.files && this.files[0];
+      if (!file) {
+        showAuthorPhoto(author.photo || "assets/photo.png", "Текущее фото — останется, если не выбрать новое.");
+        return;
+      }
+      var r = new FileReader();
+      r.onload = function () { showAuthorPhoto(r.result, "Новый файл: " + file.name + " — заменит текущее фото при сохранении."); };
+      r.readAsDataURL(file);
+    });
     $("authorForm").addEventListener("submit", function (e) {
       e.preventDefault();
       var f = $("authorForm");
