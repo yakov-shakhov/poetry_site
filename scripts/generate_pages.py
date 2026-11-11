@@ -188,10 +188,12 @@ def build_page(template, p, sorted_list, author, audios, videos):
     # 1. Песочница помечена noindex — генерация должна индексироваться.
     page = re.sub(r'\s*<meta name="robots"[^>]*>\n', "\n", page)
 
-    # 2. Страница живёт в /poem/ — ассеты и data-скрипты абсолютными путями.
-    page = page.replace('href="assets/', 'href="/assets/')
-    page = page.replace('src="assets/', 'src="/assets/')
-    page = page.replace('src="data/', 'src="/data/')
+    # 2. Страница живёт в /poem/ — ассеты и data-скрипты ведём на уровень
+    #    выше ОТНОСИТЕЛЬНО: работает и на yakovshakhov.ru, и в песочнице
+    #    на github.io/poetry_site/ (корневые "/assets/..." там 404).
+    page = page.replace('href="assets/', 'href="../assets/')
+    page = page.replace('src="assets/', 'src="../assets/')
+    page = page.replace('src="data/', 'src="../data/')
 
     # 3. Title/description/OG — под стих.
     page = page.replace("<title>Яков Шахов — стихи</title>",
@@ -217,13 +219,13 @@ def build_page(template, p, sorted_list, author, audios, videos):
         '  <meta property="og:url" content="' + esc(url) + '">')
 
     # 4. Хеш стиха до загрузки app.js — иначе SPA покажет главную.
-    #    (после шага 2 путь уже абсолютный)
+    #    (после шага 2 путь к data уже "../data/")
     page = page.replace(
-        '<script src="/data/author.js"></script>',
+        '<script src="../data/author.js"></script>',
         '<script>/* Страница стиха: без хеша открываем именно этот стих */\n'
         '    if (!location.hash) history.replaceState(null, "", "#poem/' +
         esc(p["id"]) + '");</script>\n'
-        '  <script src="/data/author.js"></script>')
+        '  <script src="../data/author.js"></script>')
 
     # 5. Вшиваем статическую разметку страницы стиха (ботам и до JS).
     page = re.sub(
