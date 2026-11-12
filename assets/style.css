@@ -350,6 +350,20 @@ article.poem pre.text {
 }
 .random-link:hover { color: var(--accent-dark); }
 .random-link svg { display: block; }
+/* На мобильных «Случайный стих» — кнопка, как под фото и био на главной.
+   Место в строке позволяет, поэтому кубик оставляем (на главной его прячут). */
+@media (max-width: 980px) {
+  .poem-actions { flex-wrap: wrap; }
+  .random-link {
+    margin-left: auto; /* если не влезла и ушла на вторую строку — справа */
+    padding: 12px 24px; border-radius: 8px;
+    background: var(--accent); color: var(--card);
+    font: bold 15px/1 Georgia, serif;
+  }
+  .random-link:hover { background: var(--accent-dark); color: var(--card); }
+  /* без кубика — как «Случайный стих» на главной на мобильных */
+  .random-link svg { display: none; }
+}
 
 /* ── Краевые стрелки листания (только сенсорные экраны):
    подсказывают про свайпы и сами служат тап-целями по краям ── */

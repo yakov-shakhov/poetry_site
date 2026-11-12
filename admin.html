@@ -1366,6 +1366,11 @@
     }
     function restoreAudioDraft() {
       var ok = restoreDraft(audioForm);
+      if (ok && !audioForm.elements.id.value) {
+        /* Черновик новой записи: «Связанный стих» предыдущего добавления
+           не переносим в форму — поле остаётся пустым до явного выбора. */
+        audioForm.elements.poem.value = "";
+      }
       if (ok) {
         var t = audioForm.elements.title.value;
         $("audioFormTitle").textContent = audioForm.elements.id.value
@@ -1379,6 +1384,11 @@
     }
     function restoreVideoDraft() {
       var ok = restoreDraft(videoForm);
+      if (ok && !videoForm.elements.id.value) {
+        /* Черновик новой записи: «Связанный стих» предыдущего добавления
+           не переносим в форму — поле остаётся пустым до явного выбора. */
+        videoForm.elements.poem.value = "";
+      }
       if (ok) {
         var t = videoForm.elements.title.value;
         $("videoFormTitle").textContent = videoForm.elements.id.value
