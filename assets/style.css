@@ -343,25 +343,18 @@ article.poem pre.text {
   display: flex; justify-content: space-between; align-items: center;
   gap: 12px; margin: 16px auto 0; max-width: 760px;
 }
+/* «Случайный стих» — кнопка в стиле главной, с кубиком (место позволяет) */
 .random-link {
-  display: inline-flex; align-items: center; gap: 7px;
-  background: none; border: none; padding: 4px 8px; cursor: pointer;
-  color: var(--accent); font: 15px/1 Georgia, serif;
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--accent); border: none; padding: 12px 24px; border-radius: 8px;
+  cursor: pointer; color: var(--card); font: bold 15px/1 Georgia, serif;
 }
-.random-link:hover { color: var(--accent-dark); }
-.random-link svg { display: block; }
-/* На мобильных «Случайный стих» — кнопка, как под фото и био на главной.
-   Место в строке позволяет, поэтому кубик оставляем (на главной его прячут). */
+.random-link:hover { background: var(--accent-dark); color: var(--card); }
+.random-link svg { display: block; width: 16px; height: 16px; flex-shrink: 0; }
+/* На мобильных — без кубика, как «Случайный стих» под фото и био на главной */
 @media (max-width: 980px) {
   .poem-actions { flex-wrap: wrap; }
-  .random-link {
-    margin-left: auto; /* если не влезла и ушла на вторую строку — справа */
-    padding: 12px 24px; border-radius: 8px;
-    background: var(--accent); color: var(--card);
-    font: bold 15px/1 Georgia, serif;
-  }
-  .random-link:hover { background: var(--accent-dark); color: var(--card); }
-  /* без кубика — как «Случайный стих» на главной на мобильных */
+  .random-link { margin-left: auto; } /* если не влезла и ушла на вторую строку — справа */
   .random-link svg { display: none; }
 }
 
