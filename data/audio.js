@@ -14,7 +14,7 @@ window.AUDIOS = [
   "title": "Ивану Бунину",
   "reader": "читает автор",
   "date": "06.06.2021",
-  "desc": "Из клипа \"Прогулка с Иваном Буниным\" (2021 год, Елец-ТВ)",
+  "desc": "Из клипа «Прогулка с Иваном Буниным» (2021 год, Елец-ТВ)",
   "vk": "",
   "src": "https://yakovshakhov.ru/assets/audio/ivanu-buninu.mp3",
   "poem": "2015_11_14_5821"
@@ -24,7 +24,7 @@ window.AUDIOS = [
   "title": "Витать в облаках",
   "reader": "читает автор",
   "date": "17.04.2017",
-  "desc": "Из фильма \"Предчувствие\" (2017)",
+  "desc": "Из фильма «Предчувствие» (2017)",
   "vk": "",
   "src": "https://yakovshakhov.ru/assets/audio/vitat-v-oblakah.mp3",
   "poem": "2015_11_26_8067"
