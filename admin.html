@@ -76,6 +76,12 @@
     }
     .afield2 { display: flex; gap: 14px; flex-wrap: wrap; }
     .afield2 > div { flex: 1 1 200px; }
+    /* Стабильная вёрстка при поиске по стихам: место под скроллбар резервируется
+       заранее, чтобы страница не «прыгала» по горизонтали, когда длинный список
+       фильтруется до короткого и скроллбар исчезает-появляется на каждый символ */
+    html { scrollbar-gutter: stable; }
+    /* Список стихов не схлопывается в одну строку «Ничего не найдено» */
+    #poemList { min-height: 9em; }
   </style>
 </head>
 <body>
@@ -672,9 +678,15 @@
       }
       $("poemList").innerHTML = html || '<li class="amuted">Ничего не найдено.</li>';
     }
+    /* Поиск с дебаунсом: список перестраивается через 150 мс после остановки
+       ввода, а не на каждый символ — меньше перерисовок и дёрганья вёрстки */
+    var poemSearchTimer = null;
     $("poemSearch").addEventListener("input", function () {
-      poemLimit = POEM_PAGE;
-      renderPoems();
+      clearTimeout(poemSearchTimer);
+      poemSearchTimer = setTimeout(function () {
+        poemLimit = POEM_PAGE;
+        renderPoems();
+      }, 150);
     });
 
     function editPoem(id) {
