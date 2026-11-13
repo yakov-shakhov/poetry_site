@@ -664,7 +664,12 @@
     var POEM_PAGE = 50;
     var poemLimit = POEM_PAGE;
     function renderPoems() {
+      var listEl = $("poemList");
       var q = ($("poemSearch").value || "").toLowerCase();
+      /* Верх списка и позиция скролла — ДО перестройки: после innerHTML браузер
+         успевает подрезать скролл, и замер по нему даст заниженный резерв */
+      var listTopAbs = listEl.getBoundingClientRect().top + window.scrollY;
+      var scrollY0 = window.scrollY;
       var list = byDateDesc(poems).filter(function (p) {
         if (!q) return true;
         return (p.title + " " + p.text).toLowerCase().indexOf(q) !== -1;
@@ -683,7 +688,18 @@
           "Показать ещё " + Math.min(POEM_PAGE, list.length - shown.length) +
           " (показано " + shown.length + " из " + list.length + ")</button></li>";
       }
-      $("poemList").innerHTML = html || '<li class="amuted">Ничего не найдено.</li>';
+      listEl.innerHTML = html || '<li class="amuted">Ничего не найдено.</li>';
+      /* Прыжок вниз: если страница стала короче позиции скролла, браузер
+         поднимает scroll и всё содержимое съезжает вниз по экрану.
+         На время поиска резервируем высоту списка ровно до низа текущего
+         экрана — страница не укорачивается, скролл не двигается, резерв
+         невидим (он ниже границы экрана). Очистка поиска снимает резерв. */
+      if (q) {
+        var need = scrollY0 + window.innerHeight - listTopAbs;
+        if (need > 0) listEl.style.minHeight = Math.ceil(need) + "px";
+      } else {
+        listEl.style.minHeight = "";
+      }
     }
     /* Поиск с дебаунсом: список перестраивается через 150 мс после остановки
        ввода, а не на каждый символ — меньше перерисовок и дёрганья вёрстки */
