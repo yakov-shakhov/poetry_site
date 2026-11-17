@@ -294,6 +294,30 @@ article.poem pre.text {
   font: inherit; white-space: pre-wrap; margin: 0;
   font-size: 18px; line-height: 1.8;
 }
+/* ── книжное оформление (по мотивам вёрстки book_8):
+   подзаголовок «/ … /» — курсив, мельче, по центру */
+article.poem .poem-sub {
+  font-style: italic; font-size: 15px; line-height: 1.55;
+  text-align: center; color: var(--ink);
+  margin: 0 0 14px; white-space: pre-wrap;
+}
+/* эпиграф («Есенину», «Хокку. Стилизация») — вправо, мельче */
+article.poem .poem-epigraph {
+  font-style: italic; font-size: 15px; line-height: 1.55;
+  text-align: right; color: var(--ink);
+  margin: 0 0 14px; white-space: pre-wrap;
+}
+/* подпись «дата, город» в конце стиха — курсив, мельче */
+article.poem .poem-sig {
+  font-style: italic; font-size: 15px;
+  color: var(--ink); margin-top: 18px; white-space: pre-wrap;
+}
+/* сноска «* … (прим. авт.)» — мелко, серо, с линейкой сверху */
+article.poem .poem-foot {
+  font-size: 13.5px; line-height: 1.5; color: var(--muted);
+  border-top: 1px solid var(--line);
+  margin-top: 12px; padding-top: 8px;
+}
 /* подпись автора под текстом стихотворения */
 .poem-sign {
   margin-top: 30px; text-align: right;

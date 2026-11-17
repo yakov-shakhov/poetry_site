@@ -551,6 +551,115 @@
       '<p class="pager-hint"><span class="hint-desktop">R — случайный стих</span></p>';
   }
 
+  /* ── Книжное оформление текста стиха (по мотивам вёрстки book_8) ──
+     Подзаголовок «/ … /», эпиграф, подпись «дата, город», сноски
+     «_____ / * …», стрелка «->». Распознавание хвоста — порт split_meta
+     из build_book_v7.py (та же логика в scripts/generate_pages.py). */
+  var EPIGRAPH_TITLES = { "Есенину": 1, "Хокку. Стилизация": 1 };
+  var POEM_DATE_RE = new RegExp(
+    "^(\\d{1,2}[-–—.]\\d{1,2}[-–—.]\\d{2,4}" +
+    "|\\d{1,2}\\.\\d{1,2}\\.\\d{2,4}" +
+    "|(?:январ|феврал|март|апрел|ма|июн|июл|август|сентябр|октябр|ноябр|декабр)[а-я]*\\s+\\d{4}(?:\\s*г\\.?)?" +
+    "|(?:осень|весна|зима|лето)\\s+\\d{4})$", "i");
+  var POEM_ORIG_RE = /„.+“\s+by\s+/i;
+
+  function poemLooksLikeCity(line) {
+    if (line.split(/\s+/).length > 7 || line.length > 60) return false;
+    if (/[?!«»*…]/.test(line) || /\.{2}/.test(line)) return false;
+    if (/[,;:]$/.test(line)) return false;
+    if (/\.$/.test(line) && !/(?:г\.|St\.)$/.test(line)) return false;
+    if (/[а-яё]+-[а-яё]+/.test(line)) return false;
+    return true;
+  }
+
+  /* Отделить от конца текста подпись: сноска, дата/город, оригинал. */
+  function poemSplitMeta(text) {
+    var lines = String(text).replace(/\s+$/, "").split("\n");
+    var meta = [];
+    for (;;) {
+      var i = lines.length;
+      while (i > 0 && lines[i - 1].trim() === "") i--;
+      var j = i;
+      while (j > 0 && lines[j - 1].trim() !== "") j--;
+      var block = lines.slice(j, i).map(function (l) { return l.trim(); });
+      if (!block.length) break;
+      var allSig = block.every(function (b) {
+        return POEM_DATE_RE.test(b) || poemLooksLikeCity(b);
+      });
+      if (block.length >= 2 && /^_{3,}$/.test(block[block.length - 2]) &&
+          block[block.length - 1].charAt(0) === "*") {
+        meta.unshift({ kind: "f", lines: [block[block.length - 1].slice(1).trim()] });
+        block = block.slice(0, -2);
+        if (block.length && block.every(function (b) {
+              return POEM_DATE_RE.test(b) || poemLooksLikeCity(b);
+            })) {
+          meta.unshift({ kind: "s", lines: block });
+        }
+      } else if (block.length === 1 && POEM_ORIG_RE.test(block[0])) {
+        meta.unshift({ kind: "o", lines: block });
+      } else if (block.length >= 1 && block.length <= 2 && allSig) {
+        meta.unshift({ kind: "s", lines: block });
+      } else {
+        break;
+      }
+      lines = lines.slice(0, j);
+    }
+    return { body: lines.join("\n"), meta: meta };
+  }
+
+  /* Декор стиха: {subHtml, epiHtml, bodyHtml, metaHtml}. */
+  function poemDecor(p) {
+    var sp = poemSplitMeta(p.text);
+    var lines = sp.body.replace(/\s+$/, "").split("\n").map(function (l) {
+      return l.replace(/[-–—]>/g, "→"); /* «—>»/«->» → «→» */
+    });
+    /* подзаголовок: ведущие строки «/ … /» (кроме «в соавторстве…» —
+       она сноска внизу, как в книге) */
+    var sub = [];
+    var extraFoot = null;
+    while (lines.length && /^\/(.*)\/$/.test(lines[0].trim())) {
+      var s = lines.shift().trim().replace(/^\/(.*)\/$/, "$1").trim();
+      if (/^в соавторстве/.test(s)) {
+        extraFoot = s;
+      } else {
+        sub.push(s);
+      }
+    }
+    if (extraFoot) {
+      sp.meta.push({ kind: "f", lines: [extraFoot] });
+    }
+    /* эпиграф: строки до первой пустой */
+    var epi = [];
+    if (EPIGRAPH_TITLES[p.title]) {
+      while (lines.length && !lines[0].trim()) lines.shift();
+      while (lines.length && lines[0].trim()) epi.push(lines.shift());
+      while (lines.length && !lines[0].trim()) lines.shift();
+    }
+    while (lines.length && !lines[lines.length - 1].trim()) lines.pop();
+    /* подписи: дата/город (одной строкой), оригинал, сноска */
+    var metaHtml = sp.meta.map(function (m) {
+      if (m.kind === "f") {
+        return '<div class="poem-foot">' +
+          esc("* " + m.lines[0] + " (прим. авт.)") + "</div>";
+      }
+      var arr = m.lines;
+      if (arr.length === 2) {
+        if (POEM_DATE_RE.test(arr[0]) && poemLooksLikeCity(arr[1])) {
+          arr = [arr[0] + ", " + arr[1]];
+        } else if (POEM_DATE_RE.test(arr[1]) && poemLooksLikeCity(arr[0])) {
+          arr = [arr[1] + ", " + arr[0]];
+        }
+      }
+      return '<div class="poem-sig">' + esc(arr.join("\n")) + "</div>";
+    }).join("");
+    return {
+      subHtml: sub.length ? '<div class="poem-sub">' + esc(sub.join("\n")) + "</div>" : "",
+      epiHtml: epi.length ? '<div class="poem-epigraph">' + esc(epi.join("\n")) + "</div>" : "",
+      bodyHtml: esc(lines.join("\n")),
+      metaHtml: metaHtml
+    };
+  }
+
   /* ── Страница стихотворения ──────────────────────────── */
   function renderPoem(id) {
     document.title = "Яков Шахов — стихи"; /* будет заменён названием ниже */
@@ -586,6 +695,7 @@
     currentNav = { prev: prev, next: next };
     listNav = null;
     sectionNav = null;
+    var decor = poemDecor(p);
     app.innerHTML = '<div class="wrap page-center">' +
       '<article class="poem">' +
         '<a class="tag" href="' + listHref("", normGenre(p.genre), 1) + '">' + esc(normGenre(p.genre)) + '</a>' +
@@ -593,7 +703,10 @@
         /* дата слева, счётчик «x из N» справа (дублирует счётчик внизу) */
         '<div class="meta"><span>' + esc(showDate(p.date)) + '</span>' +
           '<span class="meta-pos">' + (i + 1) + ' из ' + list.length + '</span></div>' +
-        '<pre class="text">' + esc(p.text) + '</pre>' +
+        decor.subHtml +
+        decor.epiHtml +
+        '<pre class="text">' + decor.bodyHtml + '</pre>' +
+        decor.metaHtml +
         '<div class="poem-sign">' + esc(a.name) + '</div>' +
         mediaRow +
         '<div class="source-link">' +
