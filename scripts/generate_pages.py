@@ -191,13 +191,8 @@ def poem_decor(p):
                          esc("* " + m["lines"][0] + " (прим. авт.)") +
                          "</div>")
             continue
-        arr = m["lines"]
-        if len(arr) == 2:
-            if POEM_DATE_RE.match(arr[0]) and poem_looks_like_city(arr[1]):
-                arr = [arr[0] + ", " + arr[1]]
-            elif POEM_DATE_RE.match(arr[1]) and poem_looks_like_city(arr[0]):
-                arr = [arr[1] + ", " + arr[0]]
-        parts.append('<div class="poem-sig">' + esc("\n".join(arr)) + "</div>")
+        # дата-город — на своих строках (на сайте место экономить не нужно)
+        parts.append('<div class="poem-sig">' + esc("\n".join(m["lines"])) + "</div>")
     return {
         "sub_html": ('<div class="poem-sub">' + esc("\n".join(sub)) + "</div>")
                     if sub else "",
@@ -206,6 +201,50 @@ def poem_decor(p):
         "body_html": esc("\n".join(lines)),
         "meta_html": "".join(parts),
     }
+
+
+# ── Стихи-«первострочники» (как в книге): название = первая строка,
+#    на странице стиха вместо названия — «* * *». Порт из app.js. ──
+
+FIRST_LINE_EXTRA = [
+    "Я с Дона, она с Волги", "Не может солнце быть луной",
+    "Иерархия Света, иерархия Тьмы", "Давай поучимся у Бога",
+    "От Примы до Рыбы...", "С неба снег будто",
+]
+
+
+def poem_norm_ft(t):
+    t = str(t).replace("ё", "е")
+    t = re.sub(r"[—–]", "-", t)
+    return re.sub(r"\s+", " ", t).strip().rstrip(".").lower()
+
+
+def first_line_ids(poems):
+    ids = {}
+    by_norm = {}
+    for p in poems:
+        by_norm.setdefault(poem_norm_ft(p["title"]), p)
+    for p in poems:
+        t = p["title"].rstrip()
+        if not re.search(r"(…|\.\.\.)$", t):
+            continue
+        base = poem_norm_ft(t)
+        lines = [ln for ln in p["text"].split("\n")
+                 if ln.strip() and not re.match(r"^/(.*)/$", ln.strip())]
+        if lines and poem_norm_ft(" ".join(lines[:2])).startswith(base):
+            ids[p["id"]] = 1
+    for t in FIRST_LINE_EXTRA:
+        p = by_norm.get(poem_norm_ft(t))
+        if p:
+            ids[p["id"]] = 1
+    return ids
+
+
+FIRST_LINE_IDS = {}
+
+
+def poem_is_first_line(p):
+    return p["id"] in FIRST_LINE_IDS
 
 
 def prerender(p, sorted_list, author, audios, videos):
@@ -250,7 +289,7 @@ def prerender(p, sorted_list, author, audios, videos):
     html = '<div class="wrap page-center">' \
         '<article class="poem">' \
         '<a class="tag" href="' + esc(tag_href) + '">' + esc(genre) + "</a>" \
-        "<h1>" + esc(p["title"]) + "</h1>" \
+        "<h1>" + ("* * *" if poem_is_first_line(p) else esc(p["title"])) + "</h1>" \
         '<div class="meta"><span>' + esc(show_date(p.get("date"))) + "</span>" \
         '<span class="meta-pos">' + str(idx + 1) + " из " + str(n) + "</span></div>" \
         + decor["sub_html"] + \
@@ -362,6 +401,8 @@ def main():
 
     template = (ROOT / "index.html").read_text(encoding="utf-8")
     sorted_list = sorted(poems, key=lambda p: date_key(p.get("date")), reverse=True)
+    FIRST_LINE_IDS.clear()
+    FIRST_LINE_IDS.update(first_line_ids(poems))
 
     POEM_DIR.mkdir(exist_ok=True)
     for p in sorted_list:

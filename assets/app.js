@@ -510,9 +510,11 @@
     }
     var nq = normText((qStr || "").trim());
     return '<div class="cards">' + list.map(function (p) {
+      /* первострочники — в «кавычках» с многоточием (как в книге) */
+      var disp = poemDisplayTitle(p);
       var title = nq && normText(p.title).indexOf(nq) !== -1
-        ? highlightHtml(p.title, nq)
-        : esc(p.title);
+        ? highlightHtml(disp, nq)
+        : esc(disp);
       return '<article class="card" data-href="#poem/' + esc(p.id) + '">' +
         '<a class="tag" href="' + listHref("", normGenre(p.genre), 1) + '">' + esc(normGenre(p.genre)) + '</a>' +
         '<h3><a href="#poem/' + esc(p.id) + '">' + title + '</a></h3>' +
@@ -642,14 +644,8 @@
         return '<div class="poem-foot">' +
           esc("* " + m.lines[0] + " (прим. авт.)") + "</div>";
       }
+      /* дата-город — на своих строках (на сайте место экономить не нужно) */
       var arr = m.lines;
-      if (arr.length === 2) {
-        if (POEM_DATE_RE.test(arr[0]) && poemLooksLikeCity(arr[1])) {
-          arr = [arr[0] + ", " + arr[1]];
-        } else if (POEM_DATE_RE.test(arr[1]) && poemLooksLikeCity(arr[0])) {
-          arr = [arr[1] + ", " + arr[0]];
-        }
-      }
       return '<div class="poem-sig">' + esc(arr.join("\n")) + "</div>";
     }).join("");
     return {
@@ -658,6 +654,62 @@
       bodyHtml: esc(lines.join("\n")),
       metaHtml: metaHtml
     };
+  }
+
+  /* ── Стихи-«первострочники» (как в книге): название = первая строка.
+     В карточках — в «кавычках» с многоточием в конце, на странице
+     стиха вместо названия — «* * *». Явный список — названия, у которых
+     на сайте нет «...» в конце (детект по первой строке их не ловит). */
+  var FIRST_LINE_EXTRA = [
+    "Я с Дона, она с Волги", "Не может солнце быть луной",
+    "Иерархия Света, иерархия Тьмы", "Давай поучимся у Бога",
+    "От Примы до Рыбы...", "С неба снег будто"
+  ];
+
+  function poemNormFt(t) {
+    t = String(t).replace(/ё/g, "е").replace(/[—–]/g, "-");
+    return t.replace(/\s+/g, " ").trim().replace(/\.+$/, "").toLowerCase();
+  }
+
+  var firstLineIds = null;
+  function firstLineSet() {
+    if (firstLineIds) return firstLineIds;
+    firstLineIds = {};
+    var list = poems();
+    var byNorm = {};
+    list.forEach(function (p) {
+      var k = poemNormFt(p.title);
+      if (!(k in byNorm)) byNorm[k] = p;
+    });
+    list.forEach(function (p) {
+      var t = p.title.replace(/\s+$/, "");
+      if (!/(…|\.\.\.)$/.test(t)) return;
+      var base = poemNormFt(t);
+      var lines = p.text.split("\n").filter(function (l) {
+        return l.trim() && !/^\/(.*)\/$/.test(l.trim());
+      });
+      if (lines.length &&
+          poemNormFt(lines.slice(0, 2).join(" ")).indexOf(base) === 0) {
+        firstLineIds[p.id] = 1;
+      }
+    });
+    FIRST_LINE_EXTRA.forEach(function (t) {
+      var p = byNorm[poemNormFt(t)];
+      if (p) firstLineIds[p.id] = 1;
+    });
+    return firstLineIds;
+  }
+
+  function isFirstLine(p) {
+    return !!firstLineSet()[p.id];
+  }
+
+  /* Заголовок для карточек: первострочники — «название...» в кавычках. */
+  function poemDisplayTitle(p) {
+    if (!isFirstLine(p)) return p.title;
+    var t = p.title;
+    if (!/(…|\.\.\.)$/.test(t)) t += "...";
+    return "«" + t + "»";
   }
 
   /* ── Страница стихотворения ──────────────────────────── */
@@ -699,7 +751,7 @@
     app.innerHTML = '<div class="wrap page-center">' +
       '<article class="poem">' +
         '<a class="tag" href="' + listHref("", normGenre(p.genre), 1) + '">' + esc(normGenre(p.genre)) + '</a>' +
-        '<h1>' + esc(p.title) + '</h1>' +
+        '<h1>' + (isFirstLine(p) ? '* * *' : esc(p.title)) + '</h1>' +
         /* дата слева, счётчик «x из N» справа (дублирует счётчик внизу) */
         '<div class="meta"><span>' + esc(showDate(p.date)) + '</span>' +
           '<span class="meta-pos">' + (i + 1) + ' из ' + list.length + '</span></div>' +
