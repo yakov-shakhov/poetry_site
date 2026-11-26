@@ -1038,6 +1038,9 @@
     var all = audios();
     var cards = all.map(function (a) {
       var p = poemById(a.poem);
+      /* заголовок — как в карточках стихов: у первострочников
+         «название...» в кавычках */
+      var disp = p ? poemDisplayTitle(p) : a.title;
       return '<article class="card audio-card">' +
         (p
           ? '<div class="card-top">' +
@@ -1045,14 +1048,14 @@
               '<a class="totext" href="#poem/' + esc(p.id) + '" title="Перейти к тексту стихотворения">К тексту</a>' +
             '</div>'
           : '') +
-        '<h3>' + esc(a.title) + '</h3>' +
+        '<h3>' + esc(disp) + '</h3>' +
         /* «читает автор» не показываем — все чтения пока авторские;
            строка появится, если у записи будет другой чтец */
         (a.reader && a.reader !== "читает автор" ? '<p class="areader">' + esc(a.reader) + '</p>' : '') +
         (a.desc ? '<p class="adesc">' + esc(a.desc) + '</p>' : '') +
         (a.src
-          ? '<div class="aplayer" data-poem="' + esc(a.poem || "") + '" data-title="' + esc(a.title) + '">' +
-              '<button type="button" class="aplay" aria-label="Слушать: ' + esc(a.title) + '">' +
+          ? '<div class="aplayer" data-poem="' + esc(a.poem || "") + '" data-title="' + esc(disp) + '">' +
+              '<button type="button" class="aplay" aria-label="Слушать: ' + esc(disp) + '">' +
                 APLAY_SVG + APAUSE_SVG +
               '</button>' +
               '<div class="abar" title="Перемотка"><div class="atrack"><div class="aprog"></div></div></div>' +
